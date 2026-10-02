@@ -1,0 +1,134 @@
+{
+  "entities": {
+    "ShopProfile": {
+      "title": "ShopProfile",
+      "description": "Egg arat shop profile and contact information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Shop name" },
+        "tagline": { "type": "string", "description": "Shop subtitle or slogan" },
+        "proprietor": { "type": "string", "description": "Name of proprietor" },
+        "mobile": { "type": "string", "description": "Contact mobile number" },
+        "address": { "type": "string", "description": "Physical shop location" },
+        "memoFooter": { "type": "string", "description": "Footer message for vouchers" },
+        "updatedAt": { "type": "string", "description": "Last update timestamp" }
+      },
+      "required": ["name", "proprietor", "mobile"]
+    },
+    "Party": {
+      "title": "Party",
+      "description": "Egg customer, hotel, wholesale, or retailer account",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique party identifier" },
+        "name": { "type": "string", "description": "Party or shop name" },
+        "phone": { "type": "string", "description": "Contact phone number" },
+        "address": { "type": "string", "description": "Delivery address" },
+        "type": { "type": "string", "description": "Wholesale, Retail, Hotel, Other" },
+        "currentDue": { "type": "number", "description": "Outstanding balance in BDT" },
+        "totalPurchased": { "type": "number", "description": "Cumulative purchases in BDT" },
+        "notes": { "type": "string", "description": "Optional party remarks" },
+        "createdAt": { "type": "string", "description": "Record creation timestamp" }
+      },
+      "required": ["id", "name", "phone", "type", "currentDue"]
+    },
+    "Memo": {
+      "title": "Memo",
+      "description": "Egg sales voucher and cash memo invoice",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique memo ID" },
+        "memoNumber": { "type": "string", "description": "Human readable memo serial" },
+        "partyId": { "type": "string", "description": "Associated party ID" },
+        "partyName": { "type": "string", "description": "Customer name on memo" },
+        "partyPhone": { "type": "string", "description": "Customer phone on memo" },
+        "partyType": { "type": "string", "description": "Customer type" },
+        "date": { "type": "string", "description": "Invoice date YYYY-MM-DD" },
+        "formattedDate": { "type": "string", "description": "Bengali formatted date" },
+        "totalEggs": { "type": "number", "description": "Total eggs in pieces" },
+        "totalBill": { "type": "number", "description": "Total invoice bill in BDT" },
+        "previousDue": { "type": "number", "description": "Previous balance added" },
+        "totalDemand": { "type": "number", "description": "Total demand (bill + due)" },
+        "cashPaid": { "type": "number", "description": "Amount paid on spot" },
+        "remainingDue": { "type": "number", "description": "Net due balance" },
+        "note": { "type": "string", "description": "Optional memo remarks" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      },
+      "required": ["id", "memoNumber", "partyName", "date", "totalEggs", "totalBill", "totalDemand", "cashPaid", "remainingDue"]
+    },
+    "BaseRate": {
+      "title": "BaseRate",
+      "description": "Daily benchmark egg prices",
+      "type": "object",
+      "properties": {
+        "redRate": { "type": "number", "description": "Price per 100 red eggs" },
+        "whiteRate": { "type": "number", "description": "Price per 100 white eggs" },
+        "lastUpdated": { "type": "string", "description": "Update timestamp" },
+        "effectiveDate": { "type": "string", "description": "Effective date string" },
+        "note": { "type": "string", "description": "Rate announcement note" }
+      },
+      "required": ["redRate", "whiteRate", "lastUpdated"]
+    },
+    "BackupRecord": {
+      "title": "BackupRecord",
+      "description": "Complete cloud backup snapshot",
+      "type": "object",
+      "properties": {
+        "backupId": { "type": "string", "description": "Unique backup identifier" },
+        "backupTimestamp": { "type": "number", "description": "Unix timestamp in ms" },
+        "formattedDate": { "type": "string", "description": "Formatted date string" }
+      },
+      "required": ["backupId", "backupTimestamp"]
+    },
+    "AccountInfo": {
+      "title": "AccountInfo",
+      "description": "User account credentials and identity for arat cloud storage",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique account identifier" },
+        "name": { "type": "string", "description": "Proprietor or user name" },
+        "phone": { "type": "string", "description": "Mobile phone number" },
+        "email": { "type": "string", "description": "Google email address" },
+        "pin": { "type": "string", "description": "Security PIN code" },
+        "provider": { "type": "string", "description": "mobile or google" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "lastLoginAt": { "type": "string", "description": "Last login timestamp" }
+      },
+      "required": ["id", "name", "provider"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/parties/{partyId}": {
+      "schema": "Party",
+      "description": "Parties and customer ledger records belonging to an arat user"
+    },
+    "/users/{userId}/memos/{memoId}": {
+      "schema": "Memo",
+      "description": "Sales memos and delivery vouchers for an arat user"
+    },
+    "/users/{userId}/settings/shopProfile": {
+      "schema": "ShopProfile",
+      "description": "Shop profile and proprietor configuration"
+    },
+    "/users/{userId}/settings/baseRate": {
+      "schema": "BaseRate",
+      "description": "Today's daily egg rates"
+    },
+    "/users/{userId}/settings/preferences": {
+      "schema": "ShopProfile",
+      "description": "User display and locale preferences"
+    },
+    "/users/{userId}/account/info": {
+      "schema": "AccountInfo",
+      "description": "Account credentials and security profile"
+    },
+    "/users/{userId}/backups/{backupId}": {
+      "schema": "BackupRecord",
+      "description": "Saved cloud backup snapshots"
+    },
+    "/users/{userId}/backups/latest": {
+      "schema": "BackupRecord",
+      "description": "Latest complete snapshot backup of all data"
+    }
+  }
+}

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>প্রতিদিন ডিমের আড়ৎ</title>
+    <meta name="description" content="সহজ ও মোবাইল বান্ধব ডিমের আড়ৎ ও পাইকারি বিক্রির হিসাব খাতা, মেমো ও বাকি ব্যবস্থাপনা অ্যাপ।" />
+    <meta property="og:title" content="প্রতিদিন ডিমের আড়ৎ" />
+    <meta property="og:description" content="সহজ ও মোবাইল বান্ধব ডিমের আড়ৎ ও পাইকারি বিক্রির হিসাব খাতা, মেমো ও বাকি ব্যবস্থাপনা অ্যাপ।" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#ea580c" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="ডিমের আড়ৎ" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/jpeg" href="/egg-logo.jpg" />
+    <link rel="apple-touch-icon" href="/egg-logo.jpg" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Noto+Sans+Bengali:wght@500;700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Noto+Sans+Bengali:wght@500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Noto+Sans+Bengali:wght@500;700&display=swap" rel="stylesheet">
+    </noscript>
+    <style>
+      html {
+        font-size: 18.85px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+      body {
+        font-family: 'Hind Siliguri', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        -webkit-tap-highlight-color: transparent;
+        line-height: 1.6;
+      }
+      @keyframes egg-pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.08); }
+      }
+      @keyframes fast-spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body class="bg-slate-100 text-slate-900 min-h-screen selection:bg-blue-600 selection:text-white">
+    <div id="root">
+      <div style="max-width: 672px; margin: 0 auto; min-height: 100vh; background: #ffffff; display: flex; flex-direction: column; position: relative;">
+        <!-- Top Date Banner Shell matching Dashboard -->
+        <div style="margin: 6px; padding: 12px; border-radius: 14px; background: linear-gradient(135deg, #1e293b, #0f172a); color: white; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: #fbbf24; display: flex; align-items: center; justify-content: center; font-size: 16px;">📅</div>
+            <div>
+              <div style="font-size: 14px; font-weight: 800; color: white;">আজকের হিসাব খাতা</div>
+              <div style="font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.85);">ডিমের পাইকারি ও খুচরা লেনদেন</div>
+            </div>
+          </div>
+          <div style="background: rgba(251,191,36,0.2); border: 1px solid rgba(251,191,36,0.4); color: #fbbf24; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 9999px;">
+            আজকের দিন
+          </div>
+        </div>
+
+        <!-- 3 Quick Metrics Cards Shell -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 6px; margin-top: 4px;">
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 8px; text-align: center;">
+            <div style="font-size: 11px; font-weight: 700; color: #64748b;">মোট ডিম</div>
+            <div style="font-size: 16px; font-weight: 900; color: #0f172a; margin-top: 2px;">০ পিস</div>
+          </div>
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px 8px; text-align: center;">
+            <div style="font-size: 11px; font-weight: 700; color: #15803d;">নগদ জমা</div>
+            <div style="font-size: 16px; font-weight: 900; color: #166534; margin-top: 2px;">৳০</div>
+          </div>
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 10px 8px; text-align: center;">
+            <div style="font-size: 11px; font-weight: 700; color: #b91c1c;">মোট বাকি</div>
+            <div style="font-size: 16px; font-weight: 900; color: #991b1b; margin-top: 2px;">৳০</div>
+          </div>
+        </div>
+
+        <!-- Bottom Navigation Bar Shell -->
+        <div style="position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: rgba(255,255,255,0.98); border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-around; max-width: 672px; margin: 0 auto; z-index: 40;">
+          <div style="display: flex; flex-direction: column; align-items: center; color: #2563eb; font-weight: 800; font-size: 11px;">
+            <span style="font-size: 18px;">📊</span>
+            <span>ড্যাশবোর্ড</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; color: #64748b; font-weight: 600; font-size: 11px;">
+            <span style="font-size: 18px;">📖</span>
+            <span>খাতা</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; margin-top: -20px;">
+            <div style="width: 50px; height: 50px; border-radius: 16px; background: linear-gradient(135deg, #2563eb, #4f46e5); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 8px 16px rgba(37,99,235,0.3); border: 3px solid white;">
+              ➕
+            </div>
+            <span style="font-size: 10px; font-weight: 800; color: #1e3a8a; margin-top: 2px;">নতুন বিক্রি</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; color: #64748b; font-weight: 600; font-size: 11px;">
+            <span style="font-size: 18px;">🧾</span>
+            <span>মেমো</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; color: #64748b; font-weight: 600; font-size: 11px;">
+            <span style="font-size: 18px;">⚙️</span>
+            <span>সেটিংস</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

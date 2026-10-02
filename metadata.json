@@ -1,0 +1,7 @@
+{
+  "name": "প্রতিদিন ডিমের আড়ৎ",
+  "description": "সহজ ও মোবাইল বান্ধব ডিমের আড়ৎ ও পাইকারি বিক্রির হিসাব খাতা, মেমো ও বাকি ব্যবস্থাপনা অ্যাপ।",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
