@@ -170,69 +170,69 @@ export const MemoVoucherModal: React.FC<MemoVoucherModalProps> = ({
             return (
               <div 
                 id="printable-voucher-paper" 
-                className="bg-white border-2 border-slate-900 p-4 sm:p-5 rounded-xl shadow-xl text-slate-950 max-w-[520px] mx-auto text-xs sm:text-sm relative overflow-hidden font-['Hind_Siliguri','Noto_Sans_Bengali',sans-serif]"
-                style={{ lineHeight: '1.75' }}
+                className="bg-white border-2 border-slate-900 p-2 sm:p-2.5 rounded-xl shadow-xl text-slate-950 max-w-[520px] mx-auto text-xs sm:text-sm relative overflow-hidden font-['Anek_Bangla','Hind_Siliguri','Noto_Sans_Bengali',sans-serif]"
+                style={{ lineHeight: '1.4', letterSpacing: 'normal' }}
               >
                 {/* Top Color Accent Strip based on Party Color Theme */}
-                <div className={`h-3 w-full bg-gradient-to-r ${theme.headerBar} -mt-4 -mx-4 sm:-mt-5 sm:-mx-5 mb-3`}></div>
+                <div className={`h-2.5 w-full bg-gradient-to-r ${theme.headerBar} -mt-2 -mx-2 sm:-mt-2.5 sm:-mx-2.5 mb-1.5`}></div>
 
                 {/* 1. Header: Shop Identity */}
-                <div className="text-center pb-2.5 border-b-2 border-slate-300">
-                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-950" style={{ lineHeight: '1.3' }}>
+                <div className="text-center pb-2 border-b-2 border-slate-300">
+                  <h2 className="text-lg sm:text-xl font-black text-slate-950" style={{ lineHeight: '1.3', letterSpacing: 'normal' }}>
                     {shopProfile.name}
                   </h2>
                   {shopProfile.tagline && (
-                    <p className="text-[11.5px] sm:text-xs text-blue-950 font-black mt-1">
+                    <p className="text-[11px] sm:text-xs text-blue-950 font-black mt-0.5">
                       {shopProfile.tagline}
                     </p>
                   )}
-                  <p className="text-[11.5px] sm:text-xs text-slate-900 font-bold mt-1">
+                  <p className="text-[11px] sm:text-xs text-slate-900 font-bold mt-0.5">
                     {shopProfile.proprietor && <span>প্রোঃ {shopProfile.proprietor}</span>}
                     {shopProfile.proprietor && shopProfile.mobile && <span className="text-blue-600 font-black px-1.5">•</span>}
                     {shopProfile.mobile && <span>মোবাইল: {shopProfile.mobile}</span>}
                   </p>
                   {shopProfile.address && (
-                    <p className="text-[11px] sm:text-xs text-slate-700 font-medium mt-0.5">
+                    <p className="text-[10.5px] sm:text-xs text-slate-700 font-medium mt-0.5">
                       {shopProfile.address}
                     </p>
                   )}
-                  <div className="inline-block mt-2 px-4 py-1 bg-slate-950 text-white rounded-full text-[11px] sm:text-xs font-black tracking-wider shadow-xs">
+                  <div className="inline-block mt-1.5 px-3 py-0.5 bg-slate-950 text-white rounded-full text-[11px] font-black shadow-xs">
                     ক্যাশ মেমো / চালান
                   </div>
                 </div>
 
                 {/* 2. Customer & Memo Info (Clear High Contrast Box with Party Accent) */}
-                <div className={`bg-slate-50/90 border-2 border-slate-800 border-l-[5px] ${theme.borderLeft} rounded-xl p-3 my-3 grid grid-cols-2 gap-3 text-xs sm:text-sm`}>
-                  <div className="space-y-1.5">
+                <div className={`bg-slate-50/90 border-2 border-slate-800 border-l-[5px] ${theme.borderLeft} rounded-xl p-2.5 my-2 grid grid-cols-2 gap-2 text-xs sm:text-sm`}>
+                  <div className="space-y-1">
                     <div>
-                      <span className="text-slate-600 font-bold text-[11px] block leading-none mb-1">খরিদ্দার / পার্টির নাম:</span>
-                      <span className="font-black text-slate-950 text-sm sm:text-base block leading-snug">
+                      <span className="text-slate-600 font-bold text-[10.5px] block mb-0.5">খরিদ্দার / পার্টির নাম:</span>
+                      <span className="font-black text-slate-950 text-xs sm:text-sm block">
                         {memo.partyName}
                       </span>
                     </div>
                     {memo.partyPhone && (
                       <div className="flex items-center gap-1">
-                        <span className="text-slate-600 font-bold text-[11px]">মোবাইল:</span>
+                        <span className="text-slate-600 font-bold text-[10.5px]">মোবাইল:</span>
                         <span className="font-black text-slate-950 tabular-nums text-xs">{memo.partyPhone}</span>
                       </div>
                     )}
                     <div>
-                      <span className={`inline-block border px-2 py-0.5 rounded font-black text-[11px] ${typeBadgeStyle}`}>
+                      <span className={`inline-block border px-1.5 py-0.2 rounded font-black text-[10.5px] ${typeBadgeStyle}`}>
                         {memo.partyType}
                       </span>
                     </div>
                   </div>
 
-                  <div className="space-y-1.5 text-right flex flex-col justify-between">
+                  <div className="space-y-1 text-right flex flex-col justify-between">
                     <div>
-                      <span className="text-slate-600 font-bold text-[11px] block leading-none mb-1">মেমো নং:</span>
-                      <span className="inline-block bg-slate-950 text-white font-black font-mono text-xs sm:text-sm px-2.5 py-0.5 rounded shadow-xs">
+                      <span className="text-slate-600 font-bold text-[10.5px] block mb-0.5">মেমো নং:</span>
+                      <span className="inline-block bg-slate-950 text-white font-black font-mono text-xs px-2 py-0.5 rounded shadow-xs">
                         {formatDisplayMemoNumber(memo.memoNumber, useBengali)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-600 font-bold text-[11px] block leading-none mb-1">তারিখ:</span>
-                      <span className="font-black text-slate-950 text-xs sm:text-sm block">
+                      <span className="text-slate-600 font-bold text-[10.5px] block mb-0.5">তারিখ:</span>
+                      <span className="font-black text-slate-950 text-xs block">
                         {memo.formattedDate}
                       </span>
                     </div>
@@ -240,15 +240,15 @@ export const MemoVoucherModal: React.FC<MemoVoucherModalProps> = ({
                 </div>
 
                 {/* 3. Items Table: Crisp High-Contrast Header & Clean Boxes */}
-                <div className="py-1">
+                <div className="py-0.5">
                   <div className="border-2 border-slate-900 rounded-xl overflow-hidden shadow-xs">
                     <table className="w-full text-xs text-left border-collapse">
                       <thead>
-                        <tr className="bg-slate-950 text-white font-black text-[11px] sm:text-xs">
-                          <th className="py-2.5 px-3 w-[40%] border-r border-slate-800">ডিমের বিবরণ</th>
-                          <th className="py-2.5 px-2.5 text-center w-[20%] whitespace-nowrap border-r border-slate-800">পরিমাণ</th>
-                          <th className="py-2.5 px-2.5 text-right w-[20%] whitespace-nowrap border-r border-slate-800">দর (প্রতি পিস)</th>
-                          <th className="py-2.5 px-3 text-right w-[20%] whitespace-nowrap">মোট (৳)</th>
+                        <tr className="bg-slate-950 text-white font-black text-[11px] sm:text-xs whitespace-nowrap">
+                          <th className="py-2 px-2.5 w-[38%] border-r border-slate-800 whitespace-nowrap">ডিমের বিবরণ</th>
+                          <th className="py-2 px-2 text-center w-[20%] whitespace-nowrap border-r border-slate-800">পরিমাণ</th>
+                          <th className="py-2 px-2 text-right w-[20%] whitespace-nowrap border-r border-slate-800">দর (প্রতি পিস)</th>
+                          <th className="py-2 px-2.5 text-right w-[22%] whitespace-nowrap">মোট (৳)</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y-2 divide-slate-200">
@@ -256,19 +256,19 @@ export const MemoVoucherModal: React.FC<MemoVoucherModalProps> = ({
                           const pieceRate = item.ratePerPiece || (item.ratePerHundred / 100);
                           return (
                             <tr key={idx} className={idx % 2 === 0 ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/90 hover:bg-slate-100'}>
-                              <td className="py-2.5 px-3 font-black text-slate-950 text-xs sm:text-sm border-r border-slate-200">
-                                <span className="leading-relaxed">{item.eggType}</span>
+                              <td className="py-2 px-2.5 font-black text-slate-950 text-xs border-r border-slate-200 whitespace-nowrap">
+                                <span className="leading-tight whitespace-nowrap">{item.eggType}</span>
                               </td>
-                              <td className="py-2.5 px-2 text-center font-black text-slate-950 whitespace-nowrap border-r border-slate-200 tabular-nums text-xs sm:text-sm">
-                                <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-300">
-                                  {toBengaliNumber(item.count, useBengali)} পিস
+                              <td className="py-2 px-2 text-center font-black text-slate-950 whitespace-nowrap border-r border-slate-200 tabular-nums text-xs">
+                                <span className="bg-slate-100 px-1.5 py-0.2 rounded border border-slate-300 inline-block whitespace-nowrap">
+                                  {toBengaliNumber(item.count, useBengali)}&nbsp;পিস
                                 </span>
                               </td>
-                              <td className="py-2.5 px-2 text-right font-black text-slate-950 whitespace-nowrap border-r border-slate-200 tabular-nums text-xs sm:text-sm">
-                                ৳{toBengaliNumber(pieceRate.toFixed(2), useBengali)}
+                              <td className="py-2 px-2 text-right font-black text-slate-950 whitespace-nowrap border-r border-slate-200 tabular-nums text-xs">
+                                <span className="whitespace-nowrap">৳&nbsp;{toBengaliNumber(pieceRate.toFixed(2), useBengali)}</span>
                               </td>
-                              <td className="py-2.5 px-3 text-right font-black text-slate-950 whitespace-nowrap tabular-nums text-xs sm:text-sm">
-                                ৳{toBengaliNumber(item.totalAmount.toFixed(2), useBengali)}
+                              <td className="py-2 px-2.5 text-right font-black text-slate-950 whitespace-nowrap tabular-nums text-xs">
+                                <span className="whitespace-nowrap">৳&nbsp;{toBengaliNumber(item.totalAmount.toFixed(2), useBengali)}</span>
                               </td>
                             </tr>
                           );
@@ -278,45 +278,45 @@ export const MemoVoucherModal: React.FC<MemoVoucherModalProps> = ({
                   </div>
                 </div>
 
-                {/* 4. Financial Summary: Clearly Boxed Rows */}
+                {/* 4. Financial Summary: Clearly Separated Distinct Boxed Rows */}
                 <div className="pt-2">
-                  <div className="w-full sm:w-5/6 ml-auto bg-slate-50 border-2 border-slate-900 rounded-xl p-2.5 space-y-1.5 text-xs sm:text-sm shadow-xs">
+                  <div className="w-full sm:w-11/12 ml-auto bg-white border-2 border-slate-900 rounded-2xl p-3 space-y-2 text-xs sm:text-sm shadow-md">
                     {/* মোট ডিমের মূল্য */}
-                    <div className="flex justify-between items-center bg-white border border-slate-250 px-2.5 py-1.5 rounded-lg text-slate-900 shadow-2xs">
-                      <span className="font-bold text-xs">মোট ডিমের মূল্য:</span>
-                      <span className="font-black text-slate-950 text-xs sm:text-sm tabular-nums">
+                    <div className="flex justify-between items-center gap-2 flex-nowrap bg-amber-100 text-amber-950 border-2 border-amber-400 font-black px-3 py-1.5 rounded-xl text-xs shadow-xs">
+                      <span className="whitespace-nowrap shrink-0">মোট ডিমের মূল্য:</span>
+                      <span className="tabular-nums text-xs sm:text-sm whitespace-nowrap shrink-0 text-right">
                         {toBnCurrency(memo.totalBill, useBengali)}
                       </span>
                     </div>
 
                     {/* পূর্বের বাকি */}
                     {memo.previousDue > 0 && (
-                      <div className="flex justify-between items-center text-purple-950 font-black bg-purple-100 border border-purple-300 px-2.5 py-1 rounded-lg text-xs shadow-2xs">
-                        <span>পূর্বের বাকি (জের):</span>
-                        <span className="tabular-nums">+{toBnCurrency(memo.previousDue, useBengali)}</span>
+                      <div className="flex justify-between items-center gap-2 flex-nowrap text-purple-950 font-black bg-purple-100 border-2 border-purple-300 px-3 py-1.5 rounded-xl text-xs shadow-xs">
+                        <span className="whitespace-nowrap shrink-0">পূর্বের বাকি (জের):</span>
+                        <span className="tabular-nums text-xs sm:text-sm whitespace-nowrap shrink-0 text-right">+{toBnCurrency(memo.previousDue, useBengali)}</span>
                       </div>
                     )}
 
                     {/* সর্বমোট দাবি বিল */}
-                    <div className="flex justify-between items-center font-black text-blue-950 bg-blue-100 border-2 border-blue-400 px-2.5 py-1.5 rounded-lg text-xs sm:text-sm shadow-2xs">
-                      <span>সর্বমোট দাবি বিল:</span>
-                      <span className="tabular-nums text-xs sm:text-sm font-black">{toBnCurrency(memo.totalDemand, useBengali)}</span>
+                    <div className="flex justify-between items-center gap-2 flex-nowrap font-black text-blue-950 bg-blue-100 border-2 border-blue-400 px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-xs">
+                      <span className="whitespace-nowrap shrink-0">সর্বমোট দাবি বিল:</span>
+                      <span className="tabular-nums text-xs sm:text-sm font-black whitespace-nowrap shrink-0 text-right">{toBnCurrency(memo.totalDemand, useBengali)}</span>
                     </div>
 
                     {/* জমা / নগদ পরিশোধ */}
-                    <div className="flex justify-between items-center text-emerald-950 font-black bg-emerald-100 border border-emerald-400 px-2.5 py-1.5 rounded-lg text-xs shadow-2xs">
-                      <span>নগদ জমা / পরিশোধ:</span>
-                      <span className="tabular-nums">-{toBnCurrency(memo.cashPaid, useBengali)}</span>
+                    <div className="flex justify-between items-center gap-2 flex-nowrap text-emerald-950 font-black bg-emerald-100 border-2 border-emerald-400 px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-xs">
+                      <span className="whitespace-nowrap shrink-0">নগদ জমা / পরিশোধ:</span>
+                      <span className="tabular-nums text-xs sm:text-sm whitespace-nowrap shrink-0 text-right">-{toBnCurrency(memo.cashPaid, useBengali)}</span>
                     </div>
 
                     {/* বর্তমান বাকি অবস্থা */}
-                    <div className={`flex justify-between items-center font-black text-xs px-2.5 py-1.5 rounded-lg border-2 shadow-xs ${
+                    <div className={`flex justify-between items-center gap-2 flex-nowrap font-black text-xs sm:text-sm px-3 py-1.5 rounded-xl border-2 shadow-sm ${
                       memo.remainingDue > 0
                         ? 'bg-rose-600 border-rose-800 text-white'
                         : 'bg-emerald-600 border-emerald-800 text-white'
                     }`}>
-                      <span>{memo.remainingDue > 0 ? 'বর্তমান বাকি (দাবি):' : 'পেমেন্ট অবস্থা:'}</span>
-                      <span className="tabular-nums text-xs sm:text-sm font-black">
+                      <span className="whitespace-nowrap shrink-0">{memo.remainingDue > 0 ? 'বর্তমান বাকি (দাবি):' : 'পেমেন্ট অবস্থা:'}</span>
+                      <span className="tabular-nums text-xs sm:text-sm font-black whitespace-nowrap shrink-0 text-right">
                         {memo.remainingDue > 0 
                           ? toBnCurrency(memo.remainingDue, useBengali) 
                           : '✓ সম্পূর্ণ পরিশোধিত'}
@@ -327,26 +327,26 @@ export const MemoVoucherModal: React.FC<MemoVoucherModalProps> = ({
 
                 {/* 5. Note (if present) */}
                 {memo.note && (
-                  <div className="mt-2 bg-slate-100 border-l-4 border-indigo-600 rounded-r-lg p-2 text-xs text-slate-900 font-bold">
+                  <div className="mt-1.5 bg-slate-100 border-l-4 border-indigo-600 rounded-r-lg p-1.5 text-xs text-slate-900 font-bold">
                     <span>মন্তব্য: </span>
                     <span className="font-black">{memo.note}</span>
                   </div>
                 )}
 
                 {/* 6. Signatures */}
-                <div className="mt-3.5 pt-2 flex justify-between text-xs text-slate-950 font-black">
+                <div className="mt-2.5 pt-1.5 flex justify-between text-xs text-slate-950 font-black">
                   <div className="text-center w-26 sm:w-34">
-                    <div className="border-t-2 border-dashed border-slate-500 mb-1"></div>
+                    <div className="border-t-2 border-dashed border-slate-500 mb-0.5"></div>
                     <span className="text-slate-800 font-bold text-[10px]">ক্রেতার স্বাক্ষর</span>
                   </div>
                   <div className="text-center w-26 sm:w-34">
-                    <div className="border-t-2 border-slate-900 mb-1"></div>
+                    <div className="border-t-2 border-slate-900 mb-0.5"></div>
                     <span className="text-slate-950 font-black text-[10px]">বিক্রেতার স্বাক্ষর</span>
                   </div>
                 </div>
 
                 {/* 7. Footer Slogan */}
-                <div className="mt-2 pt-1 border-t border-slate-200 text-center text-[10px] text-slate-800 font-bold">
+                <div className="mt-1.5 pt-0.5 border-t border-slate-200 text-center text-[10px] text-slate-800 font-bold">
                   <p>{shopProfile.memoFooter || 'ধন্যবাদ, আবার আসবেন।'}</p>
                 </div>
               </div>

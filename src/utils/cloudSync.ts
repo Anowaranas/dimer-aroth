@@ -13,8 +13,6 @@ import {
   syncSupplierPaymentToFirebase,
   syncExpenseToFirebase
 } from './firebaseDataService';
-import { syncDataToCloudSql, loadDataFromCloudSql } from '../lib/cloudDbService.ts';
-import { saveToSupabaseCloud, fetchFromSupabaseCloud } from '../lib/supabase.ts';
 
 export interface CloudBackupRecord {
   backupId: string;
@@ -231,58 +229,10 @@ export async function performOnlineBackup(payload: {
     }
   }
 
-  // 3. Save to Cloud SQL / PostgreSQL (Supabase compatible backend)
-  try {
-    await syncDataToCloudSql({
-      shopProfile: payload.shopProfile,
-      baseRate: payload.baseRate,
-      parties: payload.parties,
-      memos: payload.memos,
-      suppliers: payload.suppliers,
-      supplierChalans: payload.supplierChalans,
-      supplierPayments: payload.supplierPayments,
-      expenses: payload.expenses,
-      hasData: true,
-      totalMemos: payload.memos.length,
-      totalParties: payload.parties.length,
-      totalSuppliers: (payload.suppliers || []).length,
-      totalExpenses: (payload.expenses || []).length,
-      lastBackupDate: new Date().toISOString(),
-    });
-    console.info('Cloud SQL / PostgreSQL sync complete');
-  } catch (sqlErr) {
-    console.warn('Cloud SQL sync notice:', sqlErr);
-  }
-
-  // 4. Save to Supabase Cloud Client
-  if (currentAuth?.id) {
-    try {
-      await saveToSupabaseCloud(currentAuth.id, {
-        shopProfile: payload.shopProfile,
-        baseRate: payload.baseRate,
-        parties: payload.parties,
-        memos: payload.memos,
-        suppliers: payload.suppliers,
-        supplierChalans: payload.supplierChalans,
-        supplierPayments: payload.supplierPayments,
-        expenses: payload.expenses,
-        hasData: true,
-        totalMemos: payload.memos.length,
-        totalParties: payload.parties.length,
-        totalSuppliers: (payload.suppliers || []).length,
-        totalExpenses: (payload.expenses || []).length,
-        lastBackupDate: new Date().toISOString(),
-      });
-      console.info('Supabase cloud backup complete');
-    } catch (sbErr) {
-      console.warn('Supabase sync notice:', sbErr);
-    }
-  }
-
   return {
     success: true,
     backup: backupRecord,
-    message: 'PostgreSQL / Supabase ক্লাউড ডাটাবেজে সফলভাবে ব্যাকআপ সংরক্ষিত হয়েছে।',
+    message: 'গুগল ফায়ারবেস ক্লাউড ডাটাবেজে সফলভাবে ব্যাকআপ সংরক্ষিত হয়েছে।',
   };
 }
 
@@ -325,101 +275,7 @@ export async function fetchLatestOnlineBackup(userId?: string): Promise<CloudBac
     console.warn('Firebase fetch latest backup notice:', fbErr);
   }
 
-  // 2. Try PostgreSQL / Supabase Cloud SQL
-  try {
-    const cloudSqlData = await loadDataFromCloudSql();
-    if (cloudSqlData && (cloudSqlData.memos?.length || cloudSqlData.parties?.length)) {
-      const sqlBackupRecord: CloudBackupRecord = {
-        backupId: `cloud-sql-${Date.now()}`,
-        backupTimestamp: Date.now(),
-        formattedDate: getBengaliFormattedTimestamp(),
-        shopProfile: cloudSqlData.shopProfile || {
-          name: 'মেসার্স আল্লাহর দান ডিমের আড়ৎ',
-          tagline: 'পাইকারি ও খুচরা ডিম বিক্রেতা',
-          proprietor: 'মো: আনোয়ার হোসেন',
-          mobile: '০১৭১২-৩৪৫৬৭৮',
-          address: 'আড়ৎ পট্টি, কাপ্তান বাজার, ঢাকা',
-          memoFooter: 'বিক্রিত ডিম কোনো অবস্থাতেই ফেরত নেওয়া হয় না।',
-        },
-        baseRate: cloudSqlData.baseRate || {
-          redRate: 1170,
-          whiteRate: 1120,
-          duckRate: 1350,
-          quailRate: 350,
-          effectiveDate: new Date().toISOString().split('T')[0],
-          lastUpdated: new Date().toISOString(),
-        },
-        parties: cloudSqlData.parties || [],
-        memos: cloudSqlData.memos || [],
-        suppliers: cloudSqlData.suppliers || [],
-        supplierChalans: cloudSqlData.supplierChalans || [],
-        supplierPayments: cloudSqlData.supplierPayments || [],
-        expenses: cloudSqlData.expenses || [],
-        summary: {
-          totalMemos: (cloudSqlData.memos || []).length,
-          totalParties: (cloudSqlData.parties || []).length,
-          totalSuppliers: (cloudSqlData.suppliers || []).length,
-          totalExpenses: (cloudSqlData.expenses || []).length,
-          totalBill: (cloudSqlData.memos || []).reduce((s, m) => s + (m.totalBill || 0), 0),
-          totalDue: (cloudSqlData.parties || []).reduce((s, p) => s + (p.currentDue || 0), 0),
-        },
-      };
-      localStorage.setItem(STORAGE_KEY_LATEST, JSON.stringify(sqlBackupRecord));
-      return sqlBackupRecord;
-    }
-  } catch (sqlErr) {
-    console.info('Cloud SQL load notice:', sqlErr);
-  }
-
-  // 3. Try Direct Supabase Cloud
-  if (userId) {
-    try {
-      const sbData = await fetchFromSupabaseCloud(userId);
-      if (sbData && (sbData.memos?.length || sbData.parties?.length)) {
-        const sbBackupRecord: CloudBackupRecord = {
-          backupId: `supabase-${Date.now()}`,
-          backupTimestamp: Date.now(),
-          formattedDate: getBengaliFormattedTimestamp(),
-          shopProfile: sbData.shopProfile || {
-            name: 'মেসার্স আল্লাহর দান ডিমের আড়ৎ',
-            tagline: 'পাইকারি ও খুচরা ডিম বিক্রেতা',
-            proprietor: 'মো: আনোয়ার হোসেন',
-            mobile: '০১৭১২-৩৪৫৬৭৮',
-            address: 'আড়ৎ পট্টি, কাপ্তান বাজার, ঢাকা',
-            memoFooter: 'বিক্রিত ডিম কোনো অবস্থাতেই ফেরত নেওয়া হয় না।',
-          },
-          baseRate: sbData.baseRate || {
-            redRate: 1170,
-            whiteRate: 1120,
-            duckRate: 1350,
-            quailRate: 350,
-            effectiveDate: new Date().toISOString().split('T')[0],
-            lastUpdated: new Date().toISOString(),
-          },
-          parties: sbData.parties || [],
-          memos: sbData.memos || [],
-          suppliers: sbData.suppliers || [],
-          supplierChalans: sbData.supplierChalans || [],
-          supplierPayments: sbData.supplierPayments || [],
-          expenses: sbData.expenses || [],
-          summary: {
-            totalMemos: (sbData.memos || []).length,
-            totalParties: (sbData.parties || []).length,
-            totalSuppliers: (sbData.suppliers || []).length,
-            totalExpenses: (sbData.expenses || []).length,
-            totalBill: (sbData.memos || []).reduce((s, m) => s + (m.totalBill || 0), 0),
-            totalDue: (sbData.parties || []).reduce((s, p) => s + (p.currentDue || 0), 0),
-          },
-        };
-        localStorage.setItem(STORAGE_KEY_LATEST, JSON.stringify(sbBackupRecord));
-        return sbBackupRecord;
-      }
-    } catch (sbErr) {
-      console.info('Supabase fetch notice:', sbErr);
-    }
-  }
-
-  // Fallback to local cloud mirror
+  // 2. Fallback to local cloud mirror
   try {
     const local = localStorage.getItem(STORAGE_KEY_LATEST);
     if (local) {

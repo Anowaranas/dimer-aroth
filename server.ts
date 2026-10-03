@@ -4,8 +4,6 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import * as dotenv from 'dotenv';
-import { requireAuth, type AuthRequest } from './src/middleware/auth.ts';
-import { getOrCreateUser, saveAppCloudData, getAppCloudData } from './src/db/users.ts';
 
 dotenv.config();
 
@@ -14,13 +12,15 @@ const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
-  const PORT = Number(process.env.PORT) || 3000;
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.npm_lifecycle_event === 'start';
+  const isDevMode = !isProduction && (process.env.APP_MODE === 'dev' || process.env.npm_lifecycle_event === 'dev');
+  const PORT = isDevMode ? 3000 : (Number(process.env.PORT) || 8080);
 
   app.use(compression());
   app.use(express.json({ limit: '50mb' }));
 
-  // Universal Health check endpoints for Cloud Run and monitoring (Instant 200 OK)
-  app.get(['/healthz', '/api/health', '/api/db/health'], (_req, res) => {
+  // Universal Health check endpoints for Cloud Run and Google Frontend probes
+  app.all(['/healthz', '/_ah/health', '/api/health', '/api/db/health'], (_req, res) => {
     res.status(200).json({
       status: 'ok',
       engine: 'প্রতিদিন ডিমের আড়ৎ App Server',
@@ -29,70 +29,26 @@ async function startServer() {
     });
   });
 
-  // User synchronization endpoint
-  app.post('/api/auth/sync-user', requireAuth, async (req: AuthRequest, res) => {
-    try {
-      if (!req.user || !req.user.uid) {
-        return res.status(401).json({ error: 'Unauthorized user' });
-      }
-      const { email, name, picture } = req.body;
-      const user = await getOrCreateUser(
-        req.user.uid,
-        email || req.user.email || 'user@example.com',
-        name,
-        picture
-      );
-      res.json({ success: true, user });
-    } catch (error: any) {
-      console.error('Error syncing user:', error);
-      res.status(500).json({ error: error.message || 'User sync failed' });
-    }
-  });
-
-  // Full dataset Cloud Sync / Backup endpoint
-  app.post('/api/db/sync-all', requireAuth, async (req: AuthRequest, res) => {
-    try {
-      if (!req.user || !req.user.uid) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-      const data = req.body;
-      const email = req.user.email || 'user@example.com';
-      const result = await saveAppCloudData(req.user.uid, email, data);
-      res.json(result);
-    } catch (error: any) {
-      console.error('Error syncing app data to PostgreSQL:', error);
-      res.status(500).json({ error: error.message || 'Data sync failed' });
-    }
-  });
-
-  // Full dataset Cloud Restore / Load endpoint
-  app.get('/api/db/load-all', requireAuth, async (req: AuthRequest, res) => {
-    try {
-      if (!req.user || !req.user.uid) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-      const data = await getAppCloudData(req.user.uid);
-      res.json({ success: true, data });
-    } catch (error: any) {
-      console.error('Error loading app data from PostgreSQL:', error);
-      res.status(500).json({ error: error.message || 'Data load failed' });
-    }
-  });
-
   // Determine production vs dev environment
-  const distPath = path.resolve(process.cwd(), 'dist');
+  const distPath = fs.existsSync(path.resolve(__dirname, 'dist'))
+    ? path.resolve(__dirname, 'dist')
+    : path.resolve(process.cwd(), 'dist');
   const distIndexHtml = path.resolve(distPath, 'index.html');
-  const hasDist = fs.existsSync(distIndexHtml);
-  const isDevMode = process.env.APP_MODE === 'dev' || process.env.npm_lifecycle_event === 'dev';
 
-  if (!isDevMode && hasDist) {
+  if (!isDevMode) {
     // Production Mode: Serve pre-built production static files directly
-    app.use(express.static(distPath, { maxAge: '1h', index: false }));
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath, { maxAge: '1h' }));
+    }
     app.get('*', (req, res) => {
       if (req.path.startsWith('/api/')) {
         return res.status(404).json({ error: 'API route not found' });
       }
-      res.sendFile(distIndexHtml);
+      if (fs.existsSync(distIndexHtml)) {
+        res.sendFile(distIndexHtml);
+      } else {
+        res.status(200).send('<!doctype html><html><body><h1>প্রতিদিন ডিমের আড়ৎ</h1></body></html>');
+      }
     });
   } else {
     // Development Mode: Dynamically mount Vite middleware
@@ -108,19 +64,19 @@ async function startServer() {
       app.use(vite.middlewares);
     } catch (viteErr) {
       console.warn('Vite middleware could not be loaded, using static fallback:', viteErr);
-      if (hasDist) {
+      if (fs.existsSync(distIndexHtml)) {
         app.use(express.static(distPath));
-        app.get('*', (req, res) => res.sendFile(distIndexHtml));
+        app.get('*', (_req, res) => res.sendFile(distIndexHtml));
       }
     }
   }
 
-  // Bind to 0.0.0.0 and PORT for Cloud Run container environment
-  const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server listening on http://0.0.0.0:${PORT} (Mode: ${!isDevMode && hasDist ? 'Production' : 'Development'})`);
+  // Bind to PORT for Cloud Run container environment (supports dual-stack IPv4 & IPv6)
+  const server = app.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT} (Mode: ${isDevMode ? 'Development' : 'Production'})`);
   });
 
-  server.on('error', (err: any) => {
+  server.on('error', (err) => {
     console.error('Server listen error:', err);
   });
 

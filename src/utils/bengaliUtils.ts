@@ -20,7 +20,7 @@ export function toBengaliNumber(num: number | string | undefined | null, useBeng
 }
 
 export function toBnCurrency(num: number | string | undefined | null, useBengali = true): string {
-  return `৳ ${toBengaliNumber(num, useBengali)}`;
+  return `৳\u00A0${toBengaliNumber(num, useBengali)}`;
 }
 
 export function parseBengaliToNumber(str: string | number | undefined | null): number {

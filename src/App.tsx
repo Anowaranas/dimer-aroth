@@ -245,6 +245,86 @@ export default function App() {
 
 
 
+  // =========================================================================
+  // UNIVERSAL SINGLE-WINDOW / MUTUAL EXCLUSIVITY MODAL MANAGER
+  // এক পেজ বা উইন্ডো ওপেন হলে পূর্বের সকল ওপেন উইন্ডো অটোমেটিকভাবে ক্লোজ হবে
+  // =========================================================================
+  const closeAllModals = () => {
+    setIsNewMemoModalOpen(false);
+    setSelectedPartyForNewMemo(null);
+    setNewMemoInitialDate(undefined);
+    setActiveVoucherMemo(null);
+    setIsNewChalanModalOpen(false);
+    setSelectedSupplierForNewChalan(null);
+    setNewChalanInitialDate(undefined);
+    setActiveChalanVoucher(null);
+    setPaymentModalParty(null);
+    setActiveShareMemo(null);
+    setViewingPartyDetails(null);
+    setViewingSupplierDetails(null);
+    setIsLoginModalOpen(false);
+    setIsCloudBackupModalOpen(false);
+  };
+
+  const handleOpenNewMemo = (party?: Party | null, date?: string) => {
+    closeAllModals();
+    setSelectedPartyForNewMemo(party || null);
+    setNewMemoInitialDate(date);
+    setIsNewMemoModalOpen(true);
+  };
+
+  const handleOpenNewChalan = (supplier?: Supplier | null, date?: string) => {
+    closeAllModals();
+    setSelectedSupplierForNewChalan(supplier || null);
+    setNewChalanInitialDate(date);
+    setIsNewChalanModalOpen(true);
+  };
+
+  const handleOpenMemoVoucher = (memo: Memo) => {
+    closeAllModals();
+    setActiveVoucherMemo(memo);
+  };
+
+  const handleOpenChalanVoucher = (chalan: SupplierChalan) => {
+    closeAllModals();
+    setActiveChalanVoucher(chalan);
+  };
+
+  const handleOpenPaymentModal = (party: Party) => {
+    closeAllModals();
+    setPaymentModalParty(party);
+  };
+
+  const handleOpenShareModal = (memo: Memo) => {
+    closeAllModals();
+    setActiveShareMemo(memo);
+  };
+
+  const handleOpenPartyDetails = (party: Party) => {
+    closeAllModals();
+    setViewingPartyDetails(party);
+  };
+
+  const handleOpenSupplierDetails = (supplier: Supplier) => {
+    closeAllModals();
+    setViewingSupplierDetails(supplier);
+  };
+
+  const handleOpenLoginModal = () => {
+    closeAllModals();
+    setIsLoginModalOpen(true);
+  };
+
+  const handleOpenCloudBackupModal = () => {
+    closeAllModals();
+    setIsCloudBackupModalOpen(true);
+  };
+
+  const handleTabChange = (tab: TabType) => {
+    closeAllModals();
+    setActiveTab(tab);
+  };
+
   // Handler: Restore Cloud Backup
   const handleRestoreCloudData = (data: {
     shopProfile?: ShopProfile;
@@ -1278,126 +1358,100 @@ export default function App() {
               parties={parties}
               suppliers={suppliers}
               useBengali={useBengali}
-              onOpenNewMemo={(date) => {
-                setNewMemoInitialDate(date);
-                setSelectedPartyForNewMemo(null);
-                setIsNewMemoModalOpen(true);
-              }}
-              onOpenNewChalan={(date) => {
-                setNewChalanInitialDate(date);
-                setSelectedSupplierForNewChalan(null);
-                setIsNewChalanModalOpen(true);
-              }}
-              onViewMemoVoucher={(memo) => setActiveVoucherMemo(memo)}
-              onViewChalanVoucher={(chalan) => setActiveChalanVoucher(chalan)}
-              onSelectParty={(party) => {
-                setSelectedPartyForNewMemo(party);
-                setIsNewMemoModalOpen(true);
-              }}
+              onOpenNewMemo={(date) => handleOpenNewMemo(null, date)}
+              onOpenNewChalan={(date) => handleOpenNewChalan(null, date)}
+              onViewMemoVoucher={(memo) => handleOpenMemoVoucher(memo)}
+              onViewChalanVoucher={(chalan) => handleOpenChalanVoucher(chalan)}
+              onSelectParty={(party) => handleOpenNewMemo(party)}
               onGoToPartiesTab={() => {
-                setActiveTab('khata');
+                handleTabChange('khata');
                 setKhataSubTab('parties');
               }}
-              onGoToMemosTab={() => setActiveTab('memos')}
+              onGoToMemosTab={() => handleTabChange('memos')}
               onGoToSuppliersTab={() => {
-                setActiveTab('khata');
+                handleTabChange('khata');
                 setKhataSubTab('suppliers');
               }}
-              onOpenRateSettings={() => setActiveTab('settings')}
-              onOpenShareModal={(memo) => setActiveShareMemo(memo)}
+              onOpenRateSettings={() => handleTabChange('settings')}
+              onOpenShareModal={(memo) => handleOpenShareModal(memo)}
               onDeleteMemo={handleDeleteMemo}
               onDeleteChalan={handleDeleteChalan}
-              onOpenPartyDetails={(party) => setViewingPartyDetails(party)}
-              onOpenSupplierDetails={(supplier) => setViewingSupplierDetails(supplier)}
+              onOpenPartyDetails={(party) => handleOpenPartyDetails(party)}
+              onOpenSupplierDetails={(supplier) => handleOpenSupplierDetails(supplier)}
             />
           )}
 
+          {(activeTab === 'khata' || activeTab === 'parties' || activeTab === 'suppliers') && (
+            <UnifiedKhataView
+              currentSubTab={khataSubTab}
+              onSubTabChange={(sub) => setKhataSubTab(sub)}
+              parties={parties}
+              memos={memos}
+              useBengali={useBengali}
+              onSelectPartyForSale={(party) => handleOpenNewMemo(party)}
+              onOpenPaymentModal={(party) => handleOpenPaymentModal(party)}
+              onAddParty={handleAddParty}
+              onDeleteParty={handleDeleteParty}
+              onViewMemoVoucher={(memo) => handleOpenMemoVoucher(memo)}
+              onOpenPartyDetails={(party) => handleOpenPartyDetails(party)}
+              onUpdateParty={handleUpdateParty}
+              suppliers={suppliers}
+              chalans={supplierChalans}
+              payments={supplierPayments}
+              baseRate={baseRate}
+              shopProfile={shopProfile}
+              onSelectSupplierForChalan={(sup) => handleOpenNewChalan(sup)}
+              onViewChalanVoucher={(chalan) => handleOpenChalanVoucher(chalan)}
+              onOpenSupplierDetails={(sup) => handleOpenSupplierDetails(sup)}
+              onAddSupplier={handleAddSupplier}
+              onDeleteSupplier={handleDeleteSupplier}
+              onUpdateSupplier={handleUpdateSupplier}
+              onAddChalan={handleAddSupplierChalan}
+              onDeleteChalan={handleDeleteChalan}
+              onAddSupplierPayment={handleAddSupplierPayment}
+            />
+          )}
 
-            {(activeTab === 'khata' || activeTab === 'parties' || activeTab === 'suppliers') && (
-              <UnifiedKhataView
-                currentSubTab={khataSubTab}
-                onSubTabChange={(sub) => setKhataSubTab(sub)}
-                parties={parties}
-                memos={memos}
-                useBengali={useBengali}
-                onSelectPartyForSale={(party) => {
-                  setSelectedPartyForNewMemo(party);
-                  setIsNewMemoModalOpen(true);
-                }}
-                onOpenPaymentModal={(party) => setPaymentModalParty(party)}
-                onAddParty={handleAddParty}
-                onDeleteParty={handleDeleteParty}
-                onViewMemoVoucher={(memo) => setActiveVoucherMemo(memo)}
-                onOpenPartyDetails={(party) => setViewingPartyDetails(party)}
-                onUpdateParty={handleUpdateParty}
-                suppliers={suppliers}
-                chalans={supplierChalans}
-                payments={supplierPayments}
-                baseRate={baseRate}
-                shopProfile={shopProfile}
-                onSelectSupplierForChalan={(sup) => {
-                  setSelectedSupplierForNewChalan(sup);
-                  setIsNewChalanModalOpen(true);
-                }}
-                onViewChalanVoucher={(chalan) => setActiveChalanVoucher(chalan)}
-                onOpenSupplierDetails={(sup) => setViewingSupplierDetails(sup)}
-                onAddSupplier={handleAddSupplier}
-                onDeleteSupplier={handleDeleteSupplier}
-                onUpdateSupplier={handleUpdateSupplier}
-                onAddChalan={handleAddSupplierChalan}
-                onDeleteChalan={handleDeleteChalan}
-                onAddSupplierPayment={handleAddSupplierPayment}
-              />
-            )}
+          {activeTab === 'memos' && (
+            <AllMemosView
+              memos={memos}
+              parties={parties}
+              chalans={supplierChalans}
+              suppliers={suppliers}
+              useBengali={useBengali}
+              onViewMemoVoucher={(memo) => handleOpenMemoVoucher(memo)}
+              onViewChalanVoucher={(chalan) => handleOpenChalanVoucher(chalan)}
+              onDeleteMemo={handleDeleteMemo}
+              onDeleteChalan={handleDeleteChalan}
+              onOpenNewMemo={() => handleOpenNewMemo()}
+              onOpenNewChalan={() => handleOpenNewChalan()}
+              onOpenShareModal={(memo) => handleOpenShareModal(memo)}
+              onOpenPartyDetails={(party) => handleOpenPartyDetails(party)}
+              onOpenSupplierDetails={(supplier) => handleOpenSupplierDetails(supplier)}
+            />
+          )}
 
-            {activeTab === 'memos' && (
-              <AllMemosView
-                memos={memos}
-                parties={parties}
-                chalans={supplierChalans}
-                suppliers={suppliers}
-                useBengali={useBengali}
-                onViewMemoVoucher={(memo) => setActiveVoucherMemo(memo)}
-                onViewChalanVoucher={(chalan) => setActiveChalanVoucher(chalan)}
-                onDeleteMemo={handleDeleteMemo}
-                onDeleteChalan={handleDeleteChalan}
-                onOpenNewMemo={() => {
-                  setNewMemoInitialDate(undefined);
-                  setSelectedPartyForNewMemo(null);
-                  setIsNewMemoModalOpen(true);
-                }}
-                onOpenNewChalan={() => {
-                  setNewChalanInitialDate(undefined);
-                  setSelectedSupplierForNewChalan(null);
-                  setIsNewChalanModalOpen(true);
-                }}
-                onOpenShareModal={(memo) => setActiveShareMemo(memo)}
-                onOpenPartyDetails={(party) => setViewingPartyDetails(party)}
-                onOpenSupplierDetails={(supplier) => setViewingSupplierDetails(supplier)}
-              />
-            )}
-
-            {activeTab === 'settings' && (
-              <SettingsView
-                baseRate={baseRate}
-                shopProfile={shopProfile}
-                useBengali={useBengali}
-                darkMode={darkMode}
-                authUser={authUser}
-                onUpdateBaseRate={(updatedRate) => setBaseRate(updatedRate)}
-                onUpdateShopProfile={(updatedProfile) => setShopProfile(updatedProfile)}
-                onToggleBengaliNumerals={() => setUseBengali(!useBengali)}
-                onToggleDarkMode={() => setDarkMode(!darkMode)}
-                onExportData={handleExportData}
-                onImportData={handleImportData}
-                onResetData={handleResetData}
-                isRefreshingCloud={isRefreshingCloud}
-                onRefreshCloud={handleManualCloudRefresh}
-                onOpenLoginModal={() => setIsLoginModalOpen(true)}
-                onLogout={handleLogout}
-                onOpenCloudBackup={() => setIsCloudBackupModalOpen(true)}
-              />
-            )}
+          {activeTab === 'settings' && (
+            <SettingsView
+              baseRate={baseRate}
+              shopProfile={shopProfile}
+              useBengali={useBengali}
+              darkMode={darkMode}
+              authUser={authUser}
+              onUpdateBaseRate={(updatedRate) => setBaseRate(updatedRate)}
+              onUpdateShopProfile={(updatedProfile) => setShopProfile(updatedProfile)}
+              onToggleBengaliNumerals={() => setUseBengali(!useBengali)}
+              onToggleDarkMode={() => setDarkMode(!darkMode)}
+              onExportData={handleExportData}
+              onImportData={handleImportData}
+              onResetData={handleResetData}
+              isRefreshingCloud={isRefreshingCloud}
+              onRefreshCloud={handleManualCloudRefresh}
+              onOpenLoginModal={handleOpenLoginModal}
+              onLogout={handleLogout}
+              onOpenCloudBackup={handleOpenCloudBackupModal}
+            />
+          )}
         </main>
 
         {/* Offline Connectivity Notification Banner */}
@@ -1406,17 +1460,10 @@ export default function App() {
         {/* Bottom Navigation */}
         <BottomNav
           activeTab={activeTab}
-          setActiveTab={(tab) => {
-            setActiveTab(tab);
-          }}
-          onOpenNewSale={() => {
-            setNewMemoInitialDate(undefined);
-            setSelectedPartyForNewMemo(null);
-            setIsNewMemoModalOpen(true);
-          }}
+          setActiveTab={handleTabChange}
+          onOpenNewSale={() => handleOpenNewMemo()}
           hasDueNotification={hasDueNotification}
         />
-
 
         {/* New Sale Memo Modal */}
         {isNewMemoModalOpen && (
@@ -1444,7 +1491,7 @@ export default function App() {
             shopProfile={shopProfile}
             useBengali={useBengali}
             onClose={() => setActiveVoucherMemo(null)}
-            onOpenAllShare={(memo) => setActiveShareMemo(memo)}
+            onOpenAllShare={(memo) => handleOpenShareModal(memo)}
             onDeleteMemo={handleDeleteMemo}
           />
         )}
@@ -1470,8 +1517,7 @@ export default function App() {
             onSaveChalan={(chalan) => {
               handleAddSupplierChalan(chalan);
               syncSupplierChalanToFirebase(chalan).catch(() => {});
-              setIsNewChalanModalOpen(false);
-              setActiveChalanVoucher(chalan);
+              handleOpenChalanVoucher(chalan);
             }}
           />
         )}
@@ -1505,14 +1551,8 @@ export default function App() {
             shopProfile={shopProfile}
             useBengali={useBengali}
             onClose={() => setActiveShareMemo(null)}
-            onViewVoucher={(memo) => {
-              setActiveShareMemo(null);
-              setActiveVoucherMemo(memo);
-            }}
-            onDownloadImage={(memo) => {
-              setActiveShareMemo(null);
-              setActiveVoucherMemo(memo);
-            }}
+            onViewVoucher={(memo) => handleOpenMemoVoucher(memo)}
+            onDownloadImage={(memo) => handleOpenMemoVoucher(memo)}
           />
         )}
 
@@ -1552,21 +1592,13 @@ export default function App() {
           <PartyDetailsModal
             party={viewingPartyDetails}
             memos={memos}
+            shopProfile={shopProfile}
             useBengali={useBengali}
             onClose={() => setViewingPartyDetails(null)}
-            onOpenNewMemoForParty={(party) => {
-              setSelectedPartyForNewMemo(party);
-              setIsNewMemoModalOpen(true);
-            }}
-            onOpenPaymentModal={(party) => {
-              setPaymentModalParty(party);
-            }}
-            onViewMemoVoucher={(memo) => {
-              setActiveVoucherMemo(memo);
-            }}
-            onOpenShareModal={(memo) => {
-              setActiveShareMemo(memo);
-            }}
+            onOpenNewMemoForParty={(party) => handleOpenNewMemo(party)}
+            onOpenPaymentModal={(party) => handleOpenPaymentModal(party)}
+            onViewMemoVoucher={(memo) => handleOpenMemoVoucher(memo)}
+            onOpenShareModal={(memo) => handleOpenShareModal(memo)}
             onDeleteParty={handleDeleteParty}
             onDeleteMemo={handleDeleteMemo}
             onUpdateParty={handleUpdateParty}
@@ -1582,14 +1614,9 @@ export default function App() {
             shopProfile={shopProfile}
             useBengali={useBengali}
             onClose={() => setViewingSupplierDetails(null)}
-            onOpenNewChalanForSupplier={(sup) => {
-              setSelectedSupplierForNewChalan(sup);
-              setIsNewChalanModalOpen(true);
-            }}
+            onOpenNewChalanForSupplier={(sup) => handleOpenNewChalan(sup)}
             onOpenPaymentModal={() => {}}
-            onViewChalanVoucher={(chalan) => {
-              setActiveChalanVoucher(chalan);
-            }}
+            onViewChalanVoucher={(chalan) => handleOpenChalanVoucher(chalan)}
             onDeleteSupplier={handleDeleteSupplier}
             onDeleteChalan={handleDeleteChalan}
             onUpdateSupplier={handleUpdateSupplier}

@@ -1,6 +1,9 @@
+import html2canvas from 'html2canvas';
 import { toPng } from 'html-to-image';
 import { Memo, ShopProfile, SupplierChalan } from '../types';
 import { toBengaliNumber, toBnCurrency, formatDisplayMemoNumber, formatDisplayChalanNumber } from './bengaliUtils';
+
+// Format memo text and chalan text functions...
 
 /**
  * Format memo text nicely for WhatsApp, SMS, Messenger, or Clipboard (Single clean line per row)
@@ -142,9 +145,11 @@ export function formatReminderText(memo: Memo, useBengali: boolean): string {
 
 /**
  * Generate a PNG Data URL of the DOM element with zero overlapping and crystal clear font rendering
+ * Uses html2canvas for native canvas 2D font rendering, with a fallback to html-to-image.
  */
 export async function generateElementPngDataUrl(elementId: string): Promise<string | null> {
   try {
+    // 1. Wait for document fonts to be completely ready
     if (document.fonts && document.fonts.ready) {
       try {
         await document.fonts.ready;
@@ -153,8 +158,11 @@ export async function generateElementPngDataUrl(elementId: string): Promise<stri
       }
     }
 
+    // 2. Locate target element
     const element =
       document.getElementById(elementId) ||
+      document.getElementById('printable-khatian-paper') ||
+      document.getElementById('printable-supplier-khatian-paper') ||
       document.getElementById('printable-chalan-paper') ||
       document.getElementById('printable-voucher-paper') ||
       document.getElementById('printable-memo-content');
@@ -164,22 +172,124 @@ export async function generateElementPngDataUrl(elementId: string): Promise<stri
       return null;
     }
 
-    const targetWidth = '520px';
+    // Small delay to ensure any layout re-calculations are settled
+    await new Promise((resolve) => setTimeout(resolve, 60));
 
+    // Determine target compact width matching app view size
+    const targetWidth = element.clientWidth && element.clientWidth > 300 ? Math.min(element.clientWidth, 460) : 440;
+
+    // Method A: Primary Engine - html2canvas (Direct 2D Canvas with active browser font shaping)
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2.0, // Crisp high definition without oversized scaling
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 12000,
+        windowWidth: targetWidth + 100,
+        onclone: (_clonedDoc, clonedElement) => {
+          // Remove only Google Fonts stylesheets to prevent CORS cssRules error while keeping Tailwind CSS intact
+          const externalLinks = document.querySelectorAll('link[rel="stylesheet"]');
+          externalLinks.forEach(link => {
+            const href = link.getAttribute('href') || '';
+            if (!href.includes('fonts.googleapis.com') && !href.includes('fonts.gstatic.com')) {
+              const newLink = _clonedDoc.createElement('link');
+              newLink.rel = 'stylesheet';
+              newLink.href = (link as HTMLLinkElement).href;
+              _clonedDoc.head.appendChild(newLink);
+            }
+          });
+
+          // Inject all document <style> tags (containing Tailwind CSS & component styles) into cloned document head
+          const mainStyles = document.querySelectorAll('style');
+          mainStyles.forEach(style => {
+            const newStyle = _clonedDoc.createElement('style');
+            newStyle.textContent = style.textContent;
+            _clonedDoc.head.appendChild(newStyle);
+          });
+
+          // Normalize container styles for crisp rendering matching app view dimensions
+          const widthStr = `${targetWidth}px`;
+          clonedElement.style.width = widthStr;
+          clonedElement.style.minWidth = widthStr;
+          clonedElement.style.maxWidth = widthStr;
+          clonedElement.style.letterSpacing = 'normal';
+          clonedElement.style.fontFamily = "'Hind Siliguri', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+          clonedElement.style.boxSizing = 'border-box';
+          clonedElement.style.transform = 'none';
+          clonedElement.style.margin = '0 auto';
+          clonedElement.style.overflow = 'visible';
+
+          // Ensure parents in the clone do not clip or constrain
+          let parent = clonedElement.parentElement;
+          while (parent) {
+            parent.style.width = 'auto';
+            parent.style.minWidth = widthStr;
+            parent.style.maxWidth = 'none';
+            parent.style.overflow = 'visible';
+            parent.style.padding = '0';
+            parent.style.margin = '0';
+            parent = parent.parentElement;
+          }
+
+          // Reset all child elements that could have negative letter spacing or tight line heights
+          const allNodes = clonedElement.querySelectorAll('*');
+          allNodes.forEach((node) => {
+            const el = node as HTMLElement;
+            if (el.style) {
+              // Strictly zero letter-spacing to prevent Bengali vowel & ligature collisions
+              el.style.letterSpacing = 'normal';
+              el.classList.remove('tracking-tight', 'tracking-tighter', 'leading-none');
+
+              // Ensure at least 1.45 line-height so top & bottom matras never collide
+              const computed = window.getComputedStyle(el);
+              const lh = parseFloat(computed.lineHeight);
+              const fs = parseFloat(computed.fontSize);
+              if (lh && fs && lh < fs * 1.35) {
+                el.style.lineHeight = '1.45';
+              }
+            }
+          });
+
+          // Prevent any flex items in summary rows and headers from wrapping into multiple lines
+          const flexContainers = clonedElement.querySelectorAll('.flex');
+          flexContainers.forEach((row) => {
+            const el = row as HTMLElement;
+            el.style.flexWrap = 'nowrap';
+          });
+
+          // Enforce nowrap on all table cells, headers, badges, and monetary amounts
+          const nowrapElements = clonedElement.querySelectorAll('th, td, .tabular-nums, .whitespace-nowrap, span.font-black, span.font-bold');
+          nowrapElements.forEach((node) => {
+            const el = node as HTMLElement;
+            el.style.wordBreak = 'keep-all';
+          });
+        },
+      });
+
+      const dataUrl = canvas.toDataURL('image/png', 1.0);
+      if (dataUrl && dataUrl.length > 500) {
+        return dataUrl;
+      }
+    } catch (h2cError) {
+      console.warn('html2canvas render failed, attempting toPng fallback:', h2cError);
+    }
+
+    // Method B: Fallback Engine - html-to-image with sanitized Bengali typography
     return await toPng(element, {
       quality: 1.0,
-      pixelRatio: 3.0,
+      pixelRatio: 2.0,
       backgroundColor: '#ffffff',
       cacheBust: true,
       style: {
-        width: targetWidth,
-        maxWidth: targetWidth,
-        minWidth: targetWidth,
-        margin: '0 auto',
+        width: '540px',
+        minWidth: '540px',
+        maxWidth: '540px',
         backgroundColor: '#ffffff',
         fontFamily: "'Hind Siliguri', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        lineHeight: '1.7',
-        letterSpacing: '0.01em',
+        lineHeight: '1.6',
+        letterSpacing: 'normal',
         boxSizing: 'border-box',
       },
     });

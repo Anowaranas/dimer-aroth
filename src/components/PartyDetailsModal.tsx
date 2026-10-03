@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Memo, Party } from '../types';
+import { Memo, Party, ShopProfile } from '../types';
 import { toBengaliNumber, toBnCurrency, formatDisplayMemoNumber, compareMemosDesc } from '../utils/bengaliUtils';
 import { getPartyColorTheme } from '../utils/partyColors';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { downloadElementAsImage } from '../utils/shareUtils';
 import { 
   X, 
   Phone, 
@@ -21,13 +22,17 @@ import {
   Layers,
   Sparkles,
   Calculator,
-  MessageSquare
+  MessageSquare,
+  Download,
+  Loader2,
+  Check
 } from 'lucide-react';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 
 interface PartyDetailsModalProps {
   party: Party | null;
   memos: Memo[];
+  shopProfile?: ShopProfile;
   useBengali: boolean;
   onClose: () => void;
   onOpenNewMemoForParty: (party: Party) => void;
@@ -42,6 +47,7 @@ interface PartyDetailsModalProps {
 export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
   party,
   memos,
+  shopProfile,
   useBengali,
   onClose,
   onOpenNewMemoForParty,
@@ -65,6 +71,21 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
   const [editAddress, setEditAddress] = useState(party?.address || '');
   const [editNotes, setEditNotes] = useState(party?.notes || '');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Khatian Image Download State
+  const [isDownloadingKhatian, setIsDownloadingKhatian] = useState(false);
+  const [khatianDownloadSuccess, setKhatianDownloadSuccess] = useState(false);
+
+  const handleDownloadKhatianImage = async () => {
+    if (!party) return;
+    const safeName = party.name.replace(/[^a-zA-Z0-9\u0980-\u09FF]/g, '_');
+    const fileName = `${safeName}_খতিয়ান_স্টেটমেন্ট`;
+    const success = await downloadElementAsImage('printable-khatian-paper', fileName, setIsDownloadingKhatian);
+    if (success) {
+      setKhatianDownloadSuccess(true);
+      setTimeout(() => setKhatianDownloadSuccess(false), 3000);
+    }
+  };
 
   // Update edit fields when the party changes
   useEffect(() => {
@@ -562,98 +583,209 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
                  Khotiyan Ledger Table Sheet (লেজার খতিয়ান শিট)
                  ডিমের পিচ হিসাব ও বাকি পাওনা auto যোগের স্পষ্ট টেবিল
                  ======================================================== */
-              <div className="border border-stone-200 dark:border-stone-750 rounded-xl overflow-x-auto shadow-xs bg-white dark:bg-stone-850">
-                <table className="w-full text-[11px] sm:text-xs text-left border-collapse">
-                  <thead>
-                    <tr className="bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 font-bold border-b border-stone-200 dark:border-stone-700">
-                      <th className="py-2.5 px-2.5 whitespace-nowrap">তারিখ ও মেমো</th>
-                      <th className="py-2.5 px-2.5 whitespace-nowrap">ডিমের বিবরণ ও দর (রেট সহ মোট টাকা)</th>
-                      <th className="py-2.5 px-2 text-right whitespace-nowrap">মেমোর বিল</th>
-                      <th className="py-2.5 px-2 text-right whitespace-nowrap text-rose-600 dark:text-rose-400">+ সাবেক বাকি</th>
-                      <th className="py-2.5 px-2 text-right whitespace-nowrap text-indigo-700 dark:text-indigo-300">= মোট দাবি</th>
-                      <th className="py-2.5 px-2 text-right whitespace-nowrap text-emerald-600 dark:text-emerald-400">- জমা</th>
-                      <th className="py-2.5 px-2.5 text-right whitespace-nowrap font-black text-stone-950 dark:text-stone-100">বর্তমান বাকি (জের)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-100 dark:divide-stone-750">
-                    {filteredMemos.map((m) => {
-                      return (
-                        <tr 
-                          key={m.id}
-                          onClick={() => {
-                            onClose();
-                            onViewMemoVoucher(m);
-                          }}
-                          className="hover:bg-slate-50 dark:hover:bg-stone-800/60 cursor-pointer transition"
-                        >
-                          <td className="py-2.5 px-2.5 font-medium whitespace-nowrap align-top">
-                            <div className="font-bold text-stone-900 dark:text-stone-100">{formatDisplayMemoNumber(m.memoNumber, useBengali)}</div>
-                            <div className="text-[10.5px] text-stone-500 dark:text-stone-400">{m.formattedDate}</div>
-                          </td>
-                          <td className="py-2.5 px-2.5 align-top min-w-[220px]">
-                            <div className="space-y-1">
-                              {m.items.map((it, idx) => {
-                                if (!it.count || it.count <= 0) return null;
-                                const isRed = it.eggType === 'লাল ডিম';
-                                const isWhite = it.eggType === 'সাদা ডিম';
-                                const itemTotal = it.totalAmount || Math.round(it.count * (it.ratePerPiece || (it.ratePerHundred / 100)));
-                                const rateHundred = it.ratePerHundred || Math.round((it.ratePerPiece || 0) * 100);
+              <div className="space-y-2.5">
+                {/* Download and Action Bar for Khatian */}
+                <div className="flex items-center justify-between gap-2 p-2 bg-indigo-50 dark:bg-indigo-950/60 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                  <span className="text-xs font-black text-indigo-950 dark:text-indigo-200 truncate">
+                    📋 {party.name} - এর খতিয়ান বিবরণী
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleDownloadKhatianImage}
+                    disabled={isDownloadingKhatian}
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black rounded-lg text-xs flex items-center gap-1.5 shadow-xs transition disabled:opacity-50 shrink-0"
+                  >
+                    {isDownloadingKhatian ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : khatianDownloadSuccess ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-300" />
+                    ) : (
+                      <Download className="w-3.5 h-3.5" />
+                    )}
+                    <span>
+                      {isDownloadingKhatian
+                        ? 'ডাউনলোড হচ্ছে...'
+                        : khatianDownloadSuccess
+                        ? 'ডাউনলোড সম্পন্ন!'
+                        : 'খতিয়ান ছবি ডাউনলোড (PNG)'}
+                    </span>
+                  </button>
+                </div>
 
-                                return (
-                                  <div key={idx} className="flex items-center justify-between text-[11px] font-bold bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-                                    <span className="flex items-center gap-1.5 truncate">
-                                      <span className={`w-2 h-2 rounded-full shrink-0 ${isRed ? 'bg-rose-600' : isWhite ? 'bg-cyan-500' : 'bg-purple-600'}`} />
-                                      <span>{toBengaliNumber(it.count, useBengali)} {it.eggType} {toBengaliNumber(rateHundred, useBengali)} টাকা করে</span>
-                                    </span>
-                                    <span className="font-black text-slate-900 dark:text-white tabular-nums ml-2 shrink-0">
-                                      = {toBnCurrency(itemTotal, useBengali)}
-                                    </span>
-                                  </div>
-                                );
-                              })}
-                            </div>
+                {/* Printable & Downloadable Khatian Paper Container */}
+                <div 
+                  id="printable-khatian-paper"
+                  className="bg-white border-2 border-slate-900 rounded-xl p-3 sm:p-4 text-slate-950 shadow-md font-['Hind_Siliguri','Noto_Sans_Bengali',sans-serif] space-y-2.5"
+                  style={{ lineHeight: '1.5', letterSpacing: 'normal' }}
+                >
+                  {/* Shop Branding Header */}
+                  <div className="text-center pb-2 border-b-2 border-slate-300">
+                    <h2 className="text-lg sm:text-xl font-black text-slate-950" style={{ lineHeight: '1.4', letterSpacing: 'normal' }}>
+                      {shopProfile?.name || 'প্রতিদিন ডিমের আড়ৎ'}
+                    </h2>
+                    {shopProfile?.tagline && (
+                      <p className="text-[11px] text-blue-950 font-bold mt-0.5">{shopProfile.tagline}</p>
+                    )}
+                    <p className="text-[11px] text-slate-800 font-bold mt-0.5">
+                      {shopProfile?.proprietor && <span>প্রোঃ {shopProfile.proprietor}</span>}
+                      {shopProfile?.proprietor && shopProfile?.mobile && <span className="text-blue-600 font-black px-1.5">•</span>}
+                      {shopProfile?.mobile && <span>মোবাইল: {shopProfile.mobile}</span>}
+                    </p>
+                    {shopProfile?.address && (
+                      <p className="text-[10.5px] text-slate-600 font-medium mt-0.5">{shopProfile.address}</p>
+                    )}
+                    <div className="inline-block mt-1 px-3 py-0.5 bg-slate-950 text-white rounded-full text-[11px] font-black shadow-2xs">
+                      পার্টি লেজার হিসাব খতিয়ান বিবরণী
+                    </div>
+                  </div>
+
+                  {/* Party Meta Header */}
+                  <div className="bg-slate-50 border border-slate-300 rounded-xl p-2.5 grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-slate-500 font-bold text-[10.5px] block">পার্টির নাম:</span>
+                      <span className="font-black text-slate-950 text-sm block">{party.name} ({party.type})</span>
+                      {party.phone && <p className="text-slate-700 font-bold text-[11px] mt-0.5">মোবাইল: {party.phone}</p>}
+                      {party.address && <p className="text-slate-600 text-[11px] mt-0.5">{party.address}</p>}
+                    </div>
+                    <div className="text-right flex flex-col justify-between">
+                      <div>
+                        <span className="text-slate-500 font-bold text-[10.5px] block">তারিখ:</span>
+                        <span className="font-black text-slate-950 text-xs">
+                          {new Date().toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 font-bold text-[10.5px] block">বর্তমান বাকি (জের):</span>
+                        <span className={`inline-block px-2 py-0.5 rounded font-black text-xs ${party.currentDue > 0 ? 'bg-rose-100 text-rose-950 border border-rose-300' : 'bg-emerald-100 text-emerald-950 border border-emerald-300'}`}>
+                          {toBnCurrency(party.currentDue, useBengali)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Summary 3-Column Strip */}
+                  <div className="grid grid-cols-3 gap-1.5 text-center p-1.5 bg-slate-100 rounded-xl border border-slate-300 text-xs">
+                    <div>
+                      <span className="text-[10px] text-slate-600 font-bold block">মোট বিক্রয় বিল</span>
+                      <span className="font-black text-slate-950 text-xs sm:text-sm">{toBnCurrency(totalLifetimeBilled, useBengali)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-emerald-700 font-bold block">মোট জমা আদায়</span>
+                      <span className="font-black text-emerald-800 text-xs sm:text-sm">{toBnCurrency(totalLifetimePaid, useBengali)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-rose-700 font-bold block">মোট বর্তমান বাকি</span>
+                      <span className="font-black text-rose-800 text-xs sm:text-sm">{toBnCurrency(party.currentDue, useBengali)}</span>
+                    </div>
+                  </div>
+
+                  {/* Table */}
+                  <div className="border border-slate-900 rounded-xl overflow-x-auto shadow-xs bg-white">
+                    <table className="w-full text-[11px] sm:text-xs text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-950 text-white font-bold border-b border-slate-800">
+                          <th className="py-2 px-2 whitespace-nowrap">তারিখ ও মেমো</th>
+                          <th className="py-2 px-2 whitespace-nowrap">ডিমের বিবরণ ও দর</th>
+                          <th className="py-2 px-1.5 text-right whitespace-nowrap">মেমোর বিল</th>
+                          <th className="py-2 px-1.5 text-right whitespace-nowrap text-purple-300">+ সাবেক বাকি</th>
+                          <th className="py-2 px-1.5 text-right whitespace-nowrap text-blue-300">= মোট দাবি</th>
+                          <th className="py-2 px-1.5 text-right whitespace-nowrap text-emerald-300">- জমা</th>
+                          <th className="py-2 px-2 text-right whitespace-nowrap font-black">অবশিষ্ট বাকি</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {filteredMemos.map((m) => {
+                          return (
+                            <tr 
+                              key={m.id}
+                              onClick={() => {
+                                onClose();
+                                onViewMemoVoucher(m);
+                              }}
+                              className="hover:bg-slate-50 cursor-pointer transition"
+                            >
+                              <td className="py-2 px-2 font-medium whitespace-nowrap align-top">
+                                <div className="font-bold text-slate-950">{formatDisplayMemoNumber(m.memoNumber, useBengali)}</div>
+                                <div className="text-[10px] text-slate-500">{m.formattedDate}</div>
+                              </td>
+                              <td className="py-2 px-2 align-top min-w-[200px]">
+                                <div className="space-y-0.5">
+                                  {m.items.map((it, idx) => {
+                                    if (!it.count || it.count <= 0) return null;
+                                    const isRed = it.eggType === 'লাল ডিম';
+                                    const isWhite = it.eggType === 'সাদা ডিম';
+                                    const itemTotal = it.totalAmount || Math.round(it.count * (it.ratePerPiece || (it.ratePerHundred / 100)));
+                                    const rateHundred = it.ratePerHundred || Math.round((it.ratePerPiece || 0) * 100);
+
+                                    return (
+                                      <div key={idx} className="flex items-center justify-between text-[10.5px] font-bold bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
+                                        <span className="flex items-center gap-1 truncate">
+                                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isRed ? 'bg-rose-600' : isWhite ? 'bg-cyan-500' : 'bg-purple-600'}`} />
+                                          <span>{toBengaliNumber(it.count, useBengali)} {it.eggType} @ {toBengaliNumber(rateHundred, useBengali)}৳</span>
+                                        </span>
+                                        <span className="font-black text-slate-950 tabular-nums ml-1 shrink-0">
+                                          = {toBnCurrency(itemTotal, useBengali)}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </td>
+                              <td className="py-2 px-1.5 text-right font-black text-slate-950 whitespace-nowrap align-top">
+                                {toBnCurrency(m.totalBill, useBengali)}
+                              </td>
+                              <td className="py-2 px-1.5 text-right font-bold text-rose-700 whitespace-nowrap align-top">
+                                {m.previousDue > 0 ? `+${toBnCurrency(m.previousDue, useBengali)}` : '০ ৳'}
+                              </td>
+                              <td className="py-2 px-1.5 text-right font-black text-blue-900 whitespace-nowrap align-top">
+                                {toBnCurrency(m.totalDemand, useBengali)}
+                              </td>
+                              <td className="py-2 px-1.5 text-right font-bold text-emerald-700 whitespace-nowrap align-top">
+                                {m.cashPaid > 0 ? `-${toBnCurrency(m.cashPaid, useBengali)}` : '০ ৳'}
+                              </td>
+                              <td className="py-2 px-2 text-right font-black whitespace-nowrap align-top">
+                                <span className={m.remainingDue > 0 ? 'text-rose-700 font-black' : 'text-emerald-700 font-bold'}>
+                                  {m.remainingDue > 0 ? toBnCurrency(m.remainingDue, useBengali) : 'পরিশোধ'}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-slate-100 font-black text-slate-950 border-t-2 border-slate-300">
+                          <td className="py-2 px-2">সর্বমোট:</td>
+                          <td className="py-2 px-2 text-indigo-900">
+                            মোট ডিম: {toBengaliNumber(eggAnalytics.totalEggs, useBengali)} পিস
                           </td>
-                          <td className="py-2.5 px-2 text-right font-black text-stone-900 dark:text-stone-100 whitespace-nowrap align-top">
-                            {toBnCurrency(m.totalBill, useBengali)}
+                          <td className="py-2 px-1.5 text-right">
+                            {toBnCurrency(totalLifetimeBilled, useBengali)}
                           </td>
-                          <td className="py-2.5 px-2 text-right font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap align-top">
-                            {m.previousDue > 0 ? `+${toBnCurrency(m.previousDue, useBengali)}` : '০ ৳'}
+                          <td className="py-2 px-1.5 text-right text-slate-400">-</td>
+                          <td className="py-2 px-1.5 text-right text-slate-400">-</td>
+                          <td className="py-2 px-1.5 text-right text-emerald-800">
+                            {toBnCurrency(totalLifetimePaid, useBengali)}
                           </td>
-                          <td className="py-2.5 px-2 text-right font-black text-indigo-700 dark:text-indigo-300 whitespace-nowrap align-top">
-                            {toBnCurrency(m.totalDemand, useBengali)}
-                          </td>
-                          <td className="py-2.5 px-2 text-right font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap align-top">
-                            {m.cashPaid > 0 ? `-${toBnCurrency(m.cashPaid, useBengali)}` : '০ ৳'}
-                          </td>
-                          <td className="py-2.5 px-2.5 text-right font-black whitespace-nowrap align-top">
-                            <span className={m.remainingDue > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}>
-                              {m.remainingDue > 0 ? toBnCurrency(m.remainingDue, useBengali) : 'পরিশোধ'}
-                            </span>
+                          <td className="py-2 px-2 text-right text-rose-700">
+                            {toBnCurrency(party.currentDue, useBengali)}
                           </td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                  <tfoot>
-                    <tr className="bg-stone-100/90 dark:bg-stone-800/90 font-black text-stone-950 dark:text-stone-50 border-t-2 border-stone-300 dark:border-stone-700">
-                      <td className="py-2.5 px-2.5">সর্বমোট জের:</td>
-                      <td className="py-2.5 px-2.5 text-indigo-700 dark:text-indigo-400">
-                        মোট ডিম: {toBengaliNumber(eggAnalytics.totalEggs, useBengali)} পিস
-                      </td>
-                      <td className="py-2.5 px-2 text-right">
-                        {toBnCurrency(totalLifetimeBilled, useBengali)}
-                      </td>
-                      <td className="py-2.5 px-2 text-right text-stone-400">-</td>
-                      <td className="py-2.5 px-2 text-right text-stone-400">-</td>
-                      <td className="py-2.5 px-2 text-right text-emerald-600">
-                        {toBnCurrency(totalLifetimePaid, useBengali)}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right text-rose-600 dark:text-rose-400">
-                        {toBnCurrency(party.currentDue, useBengali)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
+                      </tfoot>
+                    </table>
+                  </div>
+
+                  {/* Footer Signatures */}
+                  <div className="pt-2 flex justify-between text-xs text-slate-950 font-black">
+                    <div className="text-center w-26 sm:w-32">
+                      <div className="border-t border-dashed border-slate-400 mb-0.5"></div>
+                      <span className="text-[10px] text-slate-600">খরিদ্দারের স্বাক্ষর</span>
+                    </div>
+                    <div className="text-center w-26 sm:w-32">
+                      <div className="border-t border-slate-900 mb-0.5"></div>
+                      <span className="text-[10px] text-slate-950">আড়তের স্বাক্ষর</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               /* ========================================================
@@ -661,12 +793,16 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
                  ১ লাইনে ডিমের সংখ্যা, রেট ও টোটাল টাকা
                  ======================================================== */
               <div className="space-y-3">
-                {filteredMemos.map((memo) => {
+                {filteredMemos.map((memo, idx) => {
                   const isFullyPaid = memo.remainingDue <= 0;
-                  const typeBadgeStyle = 
-                    memo.partyType === 'পাইকারি' ? 'bg-blue-100 text-blue-950 border-blue-300 dark:bg-blue-950/80 dark:text-blue-200 dark:border-blue-700' :
-                    memo.partyType === 'হোটেল' ? 'bg-purple-100 text-purple-950 border-purple-300 dark:bg-purple-950/80 dark:text-purple-200 dark:border-purple-700' :
-                    'bg-emerald-100 text-emerald-950 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700';
+                  const cardThemes = [
+                    'bg-gradient-to-br from-blue-50/90 via-white to-indigo-50/60 border-blue-300 dark:from-blue-950/40 dark:via-slate-900 dark:to-blue-900/20 dark:border-blue-800',
+                    'bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/60 border-emerald-300 dark:from-emerald-950/40 dark:via-slate-900 dark:to-emerald-900/20 dark:border-emerald-800',
+                    'bg-gradient-to-br from-amber-50/90 via-white to-orange-50/60 border-amber-300 dark:from-amber-950/40 dark:via-slate-900 dark:to-amber-900/20 dark:border-amber-800',
+                    'bg-gradient-to-br from-purple-50/90 via-white to-pink-50/60 border-purple-300 dark:from-purple-950/40 dark:via-slate-900 dark:to-purple-900/20 dark:border-purple-800',
+                    'bg-gradient-to-br from-cyan-50/90 via-white to-sky-50/60 border-cyan-300 dark:from-cyan-950/40 dark:via-slate-900 dark:to-cyan-900/20 dark:border-cyan-800',
+                  ];
+                  const currentTheme = cardThemes[idx % cardThemes.length];
 
                   return (
                     <div
@@ -675,7 +811,7 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
                         onClose();
                         onViewMemoVoucher(memo);
                       }}
-                      className={`bg-white dark:bg-slate-900 rounded-xl p-2 sm:p-2.5 border-2 border-l-[5px] ${theme.borderLeft} ${theme.border} shadow-2xs hover:shadow-md ${theme.hoverBorder} transition-all cursor-pointer space-y-1.5`}
+                      className={`${currentTheme} rounded-2xl p-3.5 border-2 border-l-[6px] ${theme.borderLeft} shadow-md hover:shadow-lg transition-all cursor-pointer space-y-2.5 relative`}
                     >
                       {/* Top Row: Memo No, Distinct Party Pill & Type */}
                       <div className="flex items-center justify-between gap-1.5 flex-wrap">

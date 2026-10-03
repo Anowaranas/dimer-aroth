@@ -440,88 +440,88 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* ৩. চারটি মূল হিসাব মেট্রিক কার্ড - Harmonious, High-Contrast & Crisp */}
-      <div className="grid grid-cols-2 gap-1.5">
-        {/* Metric 1: Total Eggs Sold (Pieces) */}
-        <div className="bg-sky-50/80 dark:bg-slate-900 rounded-xl p-2.5 shadow-2xs border border-sky-200/90 dark:border-sky-800/80 relative overflow-hidden transition-all hover:border-sky-400 group">
+      {/* ৩. চারটি মূল হিসাব মেট্রিক কার্ড - উন্নত, আধুনিক, স্পষ্ট ও একনজরে বোধগম্য */}
+      <div className="grid grid-cols-2 gap-2">
+        {/* Metric 1: Total Eggs Sold (Pieces & Khachi) */}
+        <div className="bg-white dark:bg-slate-900 rounded-xl p-3 shadow-xs border-2 border-sky-300 dark:border-sky-800 relative overflow-hidden transition-all hover:border-sky-500 group">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm">🥚</span>
-              <p className="text-xs text-sky-950 dark:text-sky-100 font-black">
-                মোট বিক্রি
+              <span className="text-base">🥚</span>
+              <p className="text-xs text-sky-950 dark:text-sky-200 font-extrabold tracking-tight">
+                মোট ডিম বিক্রি
               </p>
             </div>
-            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-xs" />
+            <span className="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse shadow-xs" />
           </div>
-          <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-tight mt-1.5 tabular-nums">
+          <p className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white leading-tight mt-1.5 tabular-nums tracking-tight">
             {toBengaliNumber(totalEggsSold, useBengali)} <span className="text-xs font-bold text-sky-700 dark:text-sky-300">পিস</span>
           </p>
-          <div className="mt-1">
-            <span className="text-[10px] text-sky-950 dark:text-sky-200 font-bold bg-sky-100 dark:bg-sky-950/80 px-1.5 py-0.2 rounded inline-block border border-sky-200 dark:border-sky-800">
-              {dateFilter === 'today' ? 'আজকের ডিম' : 'তারিখের ডিম'}
+          <div className="mt-1 flex items-center gap-1 flex-wrap">
+            <span className="text-[10.5px] text-sky-950 dark:text-sky-200 font-bold bg-sky-100 dark:bg-sky-950/80 px-2 py-0.5 rounded-md inline-block border border-sky-300 dark:border-sky-800">
+              {toBengaliNumber(Math.floor(totalEggsSold / 30), useBengali)} খাঁচা {totalEggsSold % 30 > 0 ? `+ ${toBengaliNumber(totalEggsSold % 30, useBengali)} পিস` : ''}
             </span>
           </div>
         </div>
 
         {/* Metric 2: Total Bill */}
-        <div className="bg-indigo-50/80 dark:bg-slate-900 rounded-xl p-2.5 shadow-2xs border border-indigo-200/90 dark:border-indigo-800/80 relative overflow-hidden transition-all hover:border-indigo-400 group">
+        <div className="bg-white dark:bg-slate-900 rounded-xl p-3 shadow-xs border-2 border-indigo-300 dark:border-indigo-800 relative overflow-hidden transition-all hover:border-indigo-500 group">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm">📋</span>
-              <p className="text-xs text-indigo-950 dark:text-indigo-100 font-black">
-                মোট বিল
+              <span className="text-base">📋</span>
+              <p className="text-xs text-indigo-950 dark:text-indigo-200 font-extrabold tracking-tight">
+                মোট বিক্রি বিল
               </p>
             </div>
-            <span className="w-2 h-2 rounded-full bg-indigo-500 shadow-xs" />
+            <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-xs" />
           </div>
-          <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-tight mt-1.5 tabular-nums">
+          <p className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white leading-tight mt-1.5 tabular-nums tracking-tight">
             {toBnCurrency(totalBill, useBengali)}
           </p>
           <div className="mt-1">
-            <span className="text-[10px] text-indigo-950 dark:text-indigo-200 font-bold bg-indigo-100 dark:bg-indigo-950/80 px-1.5 py-0.2 rounded inline-block border border-indigo-200 dark:border-indigo-800">
+            <span className="text-[10.5px] text-indigo-950 dark:text-indigo-200 font-bold bg-indigo-100 dark:bg-indigo-950/80 px-2 py-0.5 rounded-md inline-block border border-indigo-300 dark:border-indigo-800">
               {toBengaliNumber(filteredMemos.length, useBengali)} টি মেমো
             </span>
           </div>
         </div>
 
         {/* Metric 3: Cash Collected */}
-        <div className="bg-emerald-50/80 dark:bg-slate-900 rounded-xl p-2.5 shadow-2xs border border-emerald-200/90 dark:border-emerald-800/80 relative overflow-hidden transition-all hover:border-emerald-400 group">
+        <div className="bg-white dark:bg-slate-900 rounded-xl p-3 shadow-xs border-2 border-emerald-300 dark:border-emerald-800 relative overflow-hidden transition-all hover:border-emerald-500 group">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm">💵</span>
-              <p className="text-xs text-emerald-950 dark:text-emerald-100 font-black">
-                নগদ আদায়
+              <span className="text-base">💵</span>
+              <p className="text-xs text-emerald-950 dark:text-emerald-200 font-extrabold tracking-tight">
+                নগদ জমা আদায়
               </p>
             </div>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-xs" />
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-xs" />
           </div>
-          <p className="text-lg sm:text-xl font-black text-emerald-700 dark:text-emerald-300 leading-tight mt-1.5 tabular-nums">
+          <p className="text-xl sm:text-2xl font-black text-emerald-800 dark:text-emerald-300 leading-tight mt-1.5 tabular-nums tracking-tight">
             {toBnCurrency(totalCashCollected, useBengali)}
           </p>
           <div className="mt-1">
-            <span className="text-[10px] text-emerald-950 dark:text-emerald-200 font-bold bg-emerald-100 dark:bg-emerald-950/80 px-1.5 py-0.2 rounded inline-block border border-emerald-200 dark:border-emerald-800">
+            <span className="text-[10.5px] text-emerald-950 dark:text-emerald-200 font-bold bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 rounded-md inline-block border border-emerald-300 dark:border-emerald-800">
               ক্যাশ জমা
             </span>
           </div>
         </div>
 
         {/* Metric 4: Due Today */}
-        <div className="bg-rose-50/80 dark:bg-slate-900 rounded-xl p-2.5 shadow-2xs border border-rose-200/90 dark:border-rose-800/80 relative overflow-hidden transition-all hover:border-rose-400 group">
+        <div className="bg-white dark:bg-slate-900 rounded-xl p-3 shadow-xs border-2 border-rose-300 dark:border-rose-800 relative overflow-hidden transition-all hover:border-rose-500 group">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm">⚠️</span>
-              <p className="text-xs text-rose-950 dark:text-rose-100 font-black">
-                বাকি পাওনা
+              <span className="text-base">⚠️</span>
+              <p className="text-xs text-rose-950 dark:text-rose-200 font-extrabold tracking-tight">
+                আজকের বাকি পাওনা
               </p>
             </div>
-            <span className="w-2 h-2 rounded-full bg-rose-500 shadow-xs" />
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-xs" />
           </div>
-          <p className="text-lg sm:text-xl font-black text-rose-700 dark:text-rose-300 leading-tight mt-1.5 tabular-nums">
+          <p className="text-xl sm:text-2xl font-black text-rose-800 dark:text-rose-300 leading-tight mt-1.5 tabular-nums tracking-tight">
             {toBnCurrency(totalDueToday, useBengali)}
           </p>
           <div className="mt-1">
-            <span className="text-[10px] text-rose-950 dark:text-rose-200 font-bold bg-rose-100 dark:bg-rose-950/80 px-1.5 py-0.2 rounded inline-block border border-rose-200 dark:border-rose-800">
-              বকেয়া হিসাব
+            <span className="text-[10.5px] text-rose-950 dark:text-rose-200 font-bold bg-rose-100 dark:bg-rose-950/80 px-2 py-0.5 rounded-md inline-block border border-rose-300 dark:border-rose-800">
+              বকেয়া জের
             </span>
           </div>
         </div>

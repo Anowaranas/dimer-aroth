@@ -8,6 +8,7 @@ import {
 } from '../utils/bengaliUtils';
 import { getPartyColorTheme } from '../utils/partyColors';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { downloadElementAsImage } from '../utils/shareUtils';
 import { 
   X, 
   Phone, 
@@ -27,7 +28,10 @@ import {
   Sparkles,
   Calculator,
   MessageSquare,
-  Truck
+  Truck,
+  Download,
+  Loader2,
+  Check
 } from 'lucide-react';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 
@@ -72,6 +76,21 @@ export const SupplierDetailsModal: React.FC<SupplierDetailsModalProps> = ({
   const [editLocation, setEditLocation] = useState(supplier?.farmLocation || '');
   const [editNotes, setEditNotes] = useState(supplier?.notes || '');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Khatian Image Download State
+  const [isDownloadingKhatian, setIsDownloadingKhatian] = useState(false);
+  const [khatianDownloadSuccess, setKhatianDownloadSuccess] = useState(false);
+
+  const handleDownloadKhatianImage = async () => {
+    if (!supplier) return;
+    const safeName = supplier.name.replace(/[^a-zA-Z0-9\u0980-\u09FF]/g, '_');
+    const fileName = `${safeName}_মহাজন_খতিয়ান_স্টেটমেন্ট`;
+    const success = await downloadElementAsImage('printable-supplier-khatian-paper', fileName, setIsDownloadingKhatian);
+    if (success) {
+      setKhatianDownloadSuccess(true);
+      setTimeout(() => setKhatianDownloadSuccess(false), 3000);
+    }
+  };
 
   // Update edit fields when the supplier changes
   useEffect(() => {
@@ -504,90 +523,204 @@ export const SupplierDetailsModal: React.FC<SupplierDetailsModalProps> = ({
                 {chalanSearchQuery ? 'কোনো চালান পাওয়া যায়নি' : 'এখনো কোনো চালান তৈরি করা হয়নি'}
               </div>
             ) : viewMode === 'ledger' ? (
-              /* Ledger Table View (হুবহু পার্টির মেমোর টেবিল ভিউয়ের মতো সেইম) */
-              <div className="overflow-x-auto rounded-xl border border-stone-200 dark:border-stone-800">
-                <table className="w-full text-xs text-left border-collapse bg-white dark:bg-stone-900">
-                  <thead>
-                    <tr className="bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-black border-b border-stone-200 dark:border-stone-700">
-                      <th className="p-2 text-center">চালান নং</th>
-                      <th className="p-2">তারিখ</th>
-                      <th className="p-2 text-center">মোট ডিম</th>
-                      <th className="p-2 text-right">মোট বিল</th>
-                      <th className="p-2 text-right">পরিশোধ</th>
-                      <th className="p-2 text-right">দেনা বাকি</th>
-                      <th className="p-2 text-center">অ্যাকশন</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-100 dark:divide-stone-800 font-bold">
-                    {filteredChalans.map((chalan) => {
-                      const remainingDue = chalan.remainingDue !== undefined ? chalan.remainingDue : chalan.dueAmount;
-                      return (
-                        <tr 
-                          key={chalan.id} 
-                          onClick={() => onViewChalanVoucher(chalan)}
-                          className="hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 cursor-pointer transition"
-                        >
-                          <td className="p-2 text-center font-mono font-black text-indigo-700 dark:text-indigo-400">
-                            {formatDisplayChalanNumber(chalan.chalanNumber, useBengali)}
-                          </td>
-                          <td className="p-2 whitespace-nowrap text-stone-600 dark:text-stone-400">
-                            {chalan.formattedDate}
-                          </td>
-                          <td className="p-2 text-center font-black tabular-nums">
-                            {toBengaliNumber(chalan.eggCount || 0, useBengali)} পিস
-                          </td>
-                          <td className="p-2 text-right font-black tabular-nums text-stone-900 dark:text-white">
-                            {toBnCurrency(chalan.totalAmount, useBengali)}
-                          </td>
-                          <td className="p-2 text-right font-black tabular-nums text-emerald-600 dark:text-emerald-400">
-                            {toBnCurrency(chalan.paidAmount || 0, useBengali)}
-                          </td>
-                          <td className="p-2 text-right font-black tabular-nums">
-                            <span className={remainingDue > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}>
-                              {remainingDue > 0 ? toBnCurrency(remainingDue, useBengali) : 'পরিশোধ'}
-                            </span>
-                          </td>
-                          <td className="p-2 text-center" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => onViewChalanVoucher(chalan)}
-                                title="ভাউচার স্লিপ দেখুন"
-                                className="p-1 rounded hover:bg-stone-200 dark:hover:bg-stone-700 text-indigo-600 dark:text-indigo-400"
-                              >
-                                <Eye className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => handleShareChalan(chalan, e)}
-                                title="হোয়াটসঅ্যাপে শেয়ার"
-                                className="p-1 rounded hover:bg-stone-200 dark:hover:bg-stone-700 text-emerald-600 dark:text-emerald-400"
-                              >
-                                <Share2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
+              /* Ledger Table View with Printable Container & Download */
+              <div className="space-y-2.5">
+                {/* Download and Action Bar for Supplier Khatian */}
+                <div className="flex items-center justify-between gap-2 p-2 bg-indigo-50 dark:bg-indigo-950/60 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                  <span className="text-xs font-black text-indigo-950 dark:text-indigo-200 truncate">
+                    📋 {supplier.name} - এর মহাজন খতিয়ান শিট
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleDownloadKhatianImage}
+                    disabled={isDownloadingKhatian}
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black rounded-lg text-xs flex items-center gap-1.5 shadow-xs transition disabled:opacity-50 shrink-0"
+                  >
+                    {isDownloadingKhatian ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : khatianDownloadSuccess ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-300" />
+                    ) : (
+                      <Download className="w-3.5 h-3.5" />
+                    )}
+                    <span>
+                      {isDownloadingKhatian
+                        ? 'ডাউনলোড হচ্ছে...'
+                        : khatianDownloadSuccess
+                        ? 'ডাউনলোড সম্পন্ন!'
+                        : 'খতিয়ান ছবি ডাউনলোড (PNG)'}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Printable & Downloadable Container */}
+                <div
+                  id="printable-supplier-khatian-paper"
+                  className="bg-white border-2 border-slate-900 rounded-xl p-3 sm:p-4 text-slate-950 shadow-md font-['Hind_Siliguri','Noto_Sans_Bengali',sans-serif] space-y-2.5"
+                  style={{ lineHeight: '1.5', letterSpacing: 'normal' }}
+                >
+                  {/* Shop Branding Header */}
+                  <div className="text-center pb-2 border-b-2 border-slate-300">
+                    <h2 className="text-lg sm:text-xl font-black text-slate-950" style={{ lineHeight: '1.4', letterSpacing: 'normal' }}>
+                      {shopProfile?.name || 'প্রতিদিন ডিমের আড়ৎ'}
+                    </h2>
+                    {shopProfile?.tagline && (
+                      <p className="text-[11px] text-blue-950 font-bold mt-0.5">{shopProfile.tagline}</p>
+                    )}
+                    <p className="text-[11px] text-slate-800 font-bold mt-0.5">
+                      {shopProfile?.proprietor && <span>প্রোঃ {shopProfile.proprietor}</span>}
+                      {shopProfile?.proprietor && shopProfile?.mobile && <span className="text-blue-600 font-black px-1.5">•</span>}
+                      {shopProfile?.mobile && <span>মোবাইল: {shopProfile.mobile}</span>}
+                    </p>
+                    <div className="inline-block mt-1 px-3 py-0.5 bg-slate-950 text-white rounded-full text-[11px] font-black shadow-2xs">
+                      মহাজন খামারি আমদানি খতিয়ান বিবরণী
+                    </div>
+                  </div>
+
+                  {/* Supplier Info */}
+                  <div className="bg-slate-50 border border-slate-300 rounded-xl p-2.5 grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-slate-500 font-bold text-[10.5px] block">মহাজন / খামারির নাম:</span>
+                      <span className="font-black text-slate-950 text-sm block">{supplier.name}</span>
+                      {supplier.phone && <p className="text-slate-700 font-bold text-[11px] mt-0.5">মোবাইল: {supplier.phone}</p>}
+                      {supplier.farmLocation && <p className="text-slate-600 text-[11px] mt-0.5">খামার: {supplier.farmLocation}</p>}
+                    </div>
+                    <div className="text-right flex flex-col justify-between">
+                      <div>
+                        <span className="text-slate-500 font-bold text-[10.5px] block">তারিখ:</span>
+                        <span className="font-black text-slate-950 text-xs">
+                          {new Date().toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 font-bold text-[10.5px] block">দেনা বাকি পাওনা:</span>
+                        <span className={`inline-block px-2 py-0.5 rounded font-black text-xs ${supplier.totalPayable > 0 ? 'bg-rose-100 text-rose-950 border border-rose-300' : 'bg-emerald-100 text-emerald-950 border border-emerald-300'}`}>
+                          {toBnCurrency(supplier.totalPayable, useBengali)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Summary 3-Column Strip */}
+                  <div className="grid grid-cols-3 gap-1.5 text-center p-1.5 bg-slate-100 rounded-xl border border-slate-300 text-xs">
+                    <div>
+                      <span className="text-[10px] text-slate-600 font-bold block">মোট ডিম আমদানি</span>
+                      <span className="font-black text-slate-950 text-xs sm:text-sm">{toBengaliNumber(eggAnalytics.totalEggs, useBengali)} পিস</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-600 font-bold block">মোট চালানের মূল্য</span>
+                      <span className="font-black text-slate-950 text-xs sm:text-sm">{toBnCurrency(totalLifetimeBilled, useBengali)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-rose-700 font-bold block">দেনা বাকি (জের)</span>
+                      <span className="font-black text-rose-800 text-xs sm:text-sm">{toBnCurrency(supplier.totalPayable, useBengali)}</span>
+                    </div>
+                  </div>
+
+                  {/* Ledger Table */}
+                  <div className="overflow-x-auto rounded-xl border border-slate-800">
+                    <table className="w-full text-xs text-left border-collapse bg-white">
+                      <thead>
+                        <tr className="bg-slate-950 text-white font-bold border-b border-slate-800 text-[11px]">
+                          <th className="p-2 text-center">চালান নং</th>
+                          <th className="p-2">তারিখ</th>
+                          <th className="p-2 text-center">মোট ডিম</th>
+                          <th className="p-2 text-right">মোট বিল</th>
+                          <th className="p-2 text-right">পরিশোধ</th>
+                          <th className="p-2 text-right">দেনা বাকি</th>
+                          <th className="p-2 text-center">অ্যাকশন</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 font-bold text-[11px]">
+                        {filteredChalans.map((chalan) => {
+                          const remainingDue = chalan.remainingDue !== undefined ? chalan.remainingDue : chalan.dueAmount;
+                          return (
+                            <tr 
+                              key={chalan.id} 
+                              onClick={() => onViewChalanVoucher(chalan)}
+                              className="hover:bg-slate-50 cursor-pointer transition"
+                            >
+                              <td className="p-2 text-center font-mono font-black text-indigo-900">
+                                {formatDisplayChalanNumber(chalan.chalanNumber, useBengali)}
+                              </td>
+                              <td className="p-2 whitespace-nowrap text-slate-700">
+                                {chalan.formattedDate}
+                              </td>
+                              <td className="p-2 text-center font-black tabular-nums">
+                                {toBengaliNumber(chalan.eggCount || 0, useBengali)} পিস
+                              </td>
+                              <td className="p-2 text-right font-black tabular-nums text-slate-950">
+                                {toBnCurrency(chalan.totalAmount, useBengali)}
+                              </td>
+                              <td className="p-2 text-right font-black tabular-nums text-emerald-700">
+                                {toBnCurrency(chalan.paidAmount || 0, useBengali)}
+                              </td>
+                              <td className="p-2 text-right font-black tabular-nums">
+                                <span className={remainingDue > 0 ? 'text-rose-700' : 'text-emerald-700'}>
+                                  {remainingDue > 0 ? toBnCurrency(remainingDue, useBengali) : 'পরিশোধ'}
+                                </span>
+                              </td>
+                              <td className="p-2 text-center" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex items-center justify-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => onViewChalanVoucher(chalan)}
+                                    title="ভাউচার স্লিপ দেখুন"
+                                    className="p-1 rounded hover:bg-slate-100 text-indigo-700"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleShareChalan(chalan, e)}
+                                    title="হোয়াটসঅ্যাপে শেয়ার"
+                                    className="p-1 rounded hover:bg-slate-100 text-emerald-700"
+                                  >
+                                    <Share2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Signatures */}
+                  <div className="pt-2 flex justify-between text-xs text-slate-950 font-black">
+                    <div className="text-center w-26 sm:w-32">
+                      <div className="border-t border-dashed border-slate-400 mb-0.5"></div>
+                      <span className="text-[10px] text-slate-600">মহাজনের স্বাক্ষর</span>
+                    </div>
+                    <div className="text-center w-26 sm:w-32">
+                      <div className="border-t border-slate-900 mb-0.5"></div>
+                      <span className="text-[10px] text-slate-950">আড়তের স্বাক্ষর</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               /* Cards View (হুবহু পার্টির মেমোর কার্ড ভিউয়ের মতো সেইম ডিজাইন) */
-              <div className="space-y-2">
-                {filteredChalans.map((chalan) => {
+              <div className="space-y-3">
+                {filteredChalans.map((chalan, idx) => {
                   const remainingDue = chalan.remainingDue !== undefined ? chalan.remainingDue : chalan.dueAmount;
                   const isPaid = remainingDue <= 0;
+                  const cardThemes = [
+                    'bg-gradient-to-br from-blue-50/90 via-white to-indigo-50/60 border-blue-300 dark:from-blue-950/40 dark:via-stone-900 dark:to-blue-900/20 dark:border-blue-800',
+                    'bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/60 border-emerald-300 dark:from-emerald-950/40 dark:via-stone-900 dark:to-emerald-900/20 dark:border-emerald-800',
+                    'bg-gradient-to-br from-amber-50/90 via-white to-orange-50/60 border-amber-300 dark:from-amber-950/40 dark:via-stone-900 dark:to-amber-900/20 dark:border-amber-800',
+                    'bg-gradient-to-br from-purple-50/90 via-white to-pink-50/60 border-purple-300 dark:from-purple-950/40 dark:via-stone-900 dark:to-purple-900/20 dark:border-purple-800',
+                    'bg-gradient-to-br from-cyan-50/90 via-white to-sky-50/60 border-cyan-300 dark:from-cyan-950/40 dark:via-stone-900 dark:to-cyan-900/20 dark:border-cyan-800',
+                  ];
+                  const currentTheme = cardThemes[idx % cardThemes.length];
 
                   return (
                     <div
                       key={chalan.id}
                       onClick={() => onViewChalanVoucher(chalan)}
-                      className={`bg-white dark:bg-stone-900 border-2 rounded-xl p-2.5 sm:p-3 shadow-2xs hover:shadow-md transition-all cursor-pointer space-y-2 ${
-                        isPaid
-                          ? 'border-emerald-200 dark:border-emerald-900/60'
-                          : 'border-rose-200 dark:border-rose-900/60'
+                      className={`${currentTheme} border-2 rounded-2xl p-3.5 shadow-md hover:shadow-lg transition-all cursor-pointer space-y-2.5 border-l-[6px] ${
+                        isPaid ? 'border-l-emerald-600' : 'border-l-rose-600'
                       }`}
                     >
                       {/* Top Row: Chalan Number & Date */}
