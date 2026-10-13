@@ -6,7 +6,9 @@ import {
   getBengaliDateFromInput, 
   getTodayDateInputValue, 
   getYesterdayDateInputValue,
-  getDayOfWeekBn
+  getDayOfWeekBn,
+  formatTypingNumber,
+  parseBengaliToNumber
 } from '../utils/bengaliUtils';
 import { 
   Wallet, 
@@ -24,6 +26,7 @@ import {
   Coins
 } from 'lucide-react';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import { hapticCancel, hapticDelete } from '../utils/haptics';
 
 interface ExpensesViewProps {
   expenses: ExpenseRecord[];
@@ -165,7 +168,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
 
   const handleCreateExpense = (e: React.FormEvent) => {
     e.preventDefault();
-    const amount = Number(newAmount) || 0;
+    const amount = parseBengaliToNumber(newAmount);
     if (amount <= 0 || !newTitle.trim()) {
       alert('সঠিক বিবরণ ও টাকার পরিমাণ লিখুন');
       return;
@@ -191,7 +194,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
   };
 
   const updateNoteCount = (key: keyof CashNoteCount, value: string) => {
-    const num = Math.max(0, parseInt(value, 10) || 0);
+    const num = Math.max(0, parseBengaliToNumber(value) || 0);
     setNoteCounts((prev) => ({ ...prev, [key]: num }));
   };
 
@@ -208,53 +211,9 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
   };
 
   return (
-    <div id="expenses-view-container" className="space-y-1.5 pb-16">
-      {/* 1. Top Summary Banner (ক্যাশ বাক্স ও নিট নগদ টাকা) */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-800 text-white rounded-xl p-2.5 shadow-sm border border-emerald-400/30">
-        <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-md pointer-events-none" />
-
-        <div className="flex items-center justify-between gap-1 relative z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-xs flex items-center justify-center text-white shadow-2xs border border-white/25">
-              <Wallet className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-xs font-black tracking-tight leading-tight">দোকান খরচ ও ক্যাশ ড্রয়ার</h2>
-              <p className="text-[10px] text-emerald-100 font-bold leading-tight">
-                {dateFormatted} {getDayOfWeekBn(selectedDate) ? `(${getDayOfWeekBn(selectedDate)})` : ''}
-              </p>
-            </div>
-          </div>
-
-          <div className="text-right">
-            <span className="text-[9px] font-bold text-emerald-100 block">ড্রয়ারের নিট নগদ</span>
-            <span className="text-sm sm:text-base font-black text-white drop-shadow-2xs">
-              {toBnCurrency(expectedNetCash, useBengali)}
-            </span>
-          </div>
-        </div>
-
-        {/* Inflow vs Outflow Mini-Strip */}
-        <div className="grid grid-cols-2 gap-1.5 mt-2 pt-1.5 border-t border-white/15 text-[10px] font-bold text-center">
-          <div className="bg-white/10 backdrop-blur-xs rounded-md p-1 border border-white/10 flex items-center justify-between px-2">
-            <span className="flex items-center gap-1 text-emerald-200 text-[9.5px]">
-              <ArrowDownRight className="w-3 h-3 text-emerald-300" />
-              <span>নগদ বিক্রি জমা</span>
-            </span>
-            <span className="font-black text-white text-xs">{toBnCurrency(totalCashIn, useBengali)}</span>
-          </div>
-          <div className="bg-white/10 backdrop-blur-xs rounded-md p-1 border border-white/10 flex items-center justify-between px-2">
-            <span className="flex items-center gap-1 text-rose-200 text-[9.5px]">
-              <ArrowUpRight className="w-3 h-3 text-rose-300" />
-              <span>মোট খরচ ও পরিশোধ</span>
-            </span>
-            <span className="font-black text-rose-300 text-xs">{toBnCurrency(totalCashOut, useBengali)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Date Switcher and View Tab Controls */}
-      <div className="bg-white dark:bg-stone-900 rounded-xl p-2 shadow-2xs border border-stone-200/90 dark:border-stone-800 space-y-1.5">
+    <div id="expenses-view-container" className="space-y-2 pb-16">
+      {/* Date Switcher and View Tab Controls */}
+      <div className="glass-card rounded-2xl p-2.5 sm:p-3 shadow-xs border space-y-2">
         {/* Date Selector Row */}
         <div className="flex items-center justify-between gap-1">
           <div className="flex items-center gap-1">
@@ -325,7 +284,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
       {activeSubTab === 'expenses' && (
         <div className="space-y-1.5">
           {/* Action Header & Category filters */}
-          <div className="bg-white dark:bg-stone-900 rounded-xl p-2 shadow-2xs border border-stone-200/90 dark:border-stone-800 space-y-1.5">
+          <div className="glass-card rounded-2xl p-2.5 sm:p-3 shadow-xs border space-y-2">
             <div className="flex items-center justify-between gap-1">
               <span className="text-xs font-black text-stone-900 dark:text-stone-100">
                 মোট খরচ: <strong className="text-rose-600">{toBnCurrency(totalDayExpenses, useBengali)}</strong>
@@ -393,17 +352,17 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
             filteredDayExpenses.map((exp) => (
               <div
                 key={exp.id}
-                className="bg-white dark:bg-stone-900 rounded-xl p-2 sm:p-2.5 border border-stone-200/90 dark:border-stone-800 shadow-2xs flex items-center justify-between gap-2"
+                className="glass-card rounded-2xl p-3 border shadow-xs hover:shadow-md transition-all flex items-center justify-between gap-2.5"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-xs font-black text-stone-950 dark:text-stone-50">
                       {exp.title}
                     </span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-800">
+                    <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-800">
                       {exp.category}
                     </span>
-                    <span className="text-[8.5px] font-bold px-1 py-0.2 rounded bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300">
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300">
                       {exp.paymentMethod}
                     </span>
                   </div>
@@ -415,18 +374,17 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs sm:text-sm font-black text-rose-600 dark:text-rose-400">
+                  <span className="text-xs sm:text-sm font-black text-rose-600 dark:text-rose-400 tabular-nums">
                     -{toBnCurrency(exp.amount, useBengali)}
                   </span>
                   <button
                     type="button"
                     title="খরচ মুছুন"
                     onClick={() => {
-                      if (window.confirm(`আপনি কি এই "${exp.title}" খরচটি মুছে ফেলতে চান?`)) {
-                        onDeleteExpense(exp.id);
-                      }
+                      hapticDelete();
+                      onDeleteExpense(exp.id);
                     }}
-                    className="p-1 rounded-md bg-stone-100 dark:bg-stone-800 hover:bg-rose-50 text-stone-400 hover:text-rose-600 transition"
+                    className="w-7 h-7 rounded-lg border border-rose-200 dark:border-rose-800/80 bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center hover:bg-rose-100 active:scale-90 transition shadow-2xs cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -441,7 +399,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
       {activeSubTab === 'cashbox' && (
         <div className="space-y-1.5">
           {/* Detailed Drawer Flow Breakdown */}
-          <div className="bg-white dark:bg-stone-900 rounded-xl p-2.5 shadow-2xs border border-stone-200/90 dark:border-stone-800 space-y-2">
+          <div className="glass-card rounded-2xl p-3 shadow-xs border space-y-2.5">
             <h3 className="text-xs font-black text-stone-900 dark:text-stone-100 flex items-center justify-between">
               <span>আজকের ক্যাশ প্রবাহ বিবরণী</span>
               <span className="text-[10px] text-stone-500 font-bold">{dateFormatted}</span>
@@ -488,7 +446,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
           </div>
 
           {/* Currency Note Counter */}
-          <div className="bg-white dark:bg-stone-900 rounded-xl p-2.5 shadow-2xs border border-stone-200/90 dark:border-stone-800 space-y-2">
+          <div className="glass-card rounded-2xl p-3 shadow-xs border space-y-2.5">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-black text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
                 <Coins className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -507,16 +465,16 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
             {/* Note Input Grid */}
             <div className="grid grid-cols-2 gap-2 text-xs">
               {/* 1000 Tk */}
-              <div className="flex items-center justify-between p-1.5 bg-stone-50 dark:bg-stone-850 rounded-lg border border-stone-200/70 dark:border-stone-750">
+              <div className="flex items-center justify-between p-2 soft-inset rounded-xl border">
                 <span className="font-bold text-stone-700 dark:text-stone-300">৳১০০০ ×</span>
                 <div className="flex items-center gap-1.5">
                   <input
-                    type="number"
-                    min="0"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="০"
-                    value={noteCounts.note1000 || ''}
+                    value={noteCounts.note1000 ? formatTypingNumber(noteCounts.note1000, false, useBengali) : ''}
                     onChange={(e) => updateNoteCount('note1000', e.target.value)}
-                    className="w-14 text-center font-black p-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded text-xs"
+                    className="w-14 text-center font-black p-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-xs"
                   />
                   <span className="text-[10px] text-stone-500 w-12 text-right font-bold">
                     ৳{toBengaliNumber(counted1000, useBengali)}
@@ -525,16 +483,16 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
               </div>
 
               {/* 500 Tk */}
-              <div className="flex items-center justify-between p-1.5 bg-stone-50 dark:bg-stone-850 rounded-lg border border-stone-200/70 dark:border-stone-750">
+              <div className="flex items-center justify-between p-2 soft-inset rounded-xl border">
                 <span className="font-bold text-stone-700 dark:text-stone-300">৳৫০০ ×</span>
                 <div className="flex items-center gap-1.5">
                   <input
-                    type="number"
-                    min="0"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="০"
-                    value={noteCounts.note500 || ''}
+                    value={noteCounts.note500 ? formatTypingNumber(noteCounts.note500, false, useBengali) : ''}
                     onChange={(e) => updateNoteCount('note500', e.target.value)}
-                    className="w-14 text-center font-black p-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded text-xs"
+                    className="w-14 text-center font-black p-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-xs"
                   />
                   <span className="text-[10px] text-stone-500 w-12 text-right font-bold">
                     ৳{toBengaliNumber(counted500, useBengali)}
@@ -543,16 +501,16 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
               </div>
 
               {/* 200 Tk */}
-              <div className="flex items-center justify-between p-1.5 bg-stone-50 dark:bg-stone-850 rounded-lg border border-stone-200/70 dark:border-stone-750">
+              <div className="flex items-center justify-between p-2 soft-inset rounded-xl border">
                 <span className="font-bold text-stone-700 dark:text-stone-300">৳২০০ ×</span>
                 <div className="flex items-center gap-1.5">
                   <input
-                    type="number"
-                    min="0"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="০"
-                    value={noteCounts.note200 || ''}
+                    value={noteCounts.note200 ? formatTypingNumber(noteCounts.note200, false, useBengali) : ''}
                     onChange={(e) => updateNoteCount('note200', e.target.value)}
-                    className="w-14 text-center font-black p-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded text-xs"
+                    className="w-14 text-center font-black p-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-xs"
                   />
                   <span className="text-[10px] text-stone-500 w-12 text-right font-bold">
                     ৳{toBengaliNumber(counted200, useBengali)}
@@ -561,16 +519,16 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
               </div>
 
               {/* 100 Tk */}
-              <div className="flex items-center justify-between p-1.5 bg-stone-50 dark:bg-stone-850 rounded-lg border border-stone-200/70 dark:border-stone-750">
+              <div className="flex items-center justify-between p-2 soft-inset rounded-xl border">
                 <span className="font-bold text-stone-700 dark:text-stone-300">৳১০০ ×</span>
                 <div className="flex items-center gap-1.5">
                   <input
-                    type="number"
-                    min="0"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="০"
-                    value={noteCounts.note100 || ''}
+                    value={noteCounts.note100 ? formatTypingNumber(noteCounts.note100, false, useBengali) : ''}
                     onChange={(e) => updateNoteCount('note100', e.target.value)}
-                    className="w-14 text-center font-black p-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded text-xs"
+                    className="w-14 text-center font-black p-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-xs"
                   />
                   <span className="text-[10px] text-stone-500 w-12 text-right font-bold">
                     ৳{toBengaliNumber(counted100, useBengali)}
@@ -579,16 +537,16 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
               </div>
 
               {/* 50 Tk */}
-              <div className="flex items-center justify-between p-1.5 bg-stone-50 dark:bg-stone-850 rounded-lg border border-stone-200/70 dark:border-stone-750">
+              <div className="flex items-center justify-between p-2 soft-inset rounded-xl border">
                 <span className="font-bold text-stone-700 dark:text-stone-300">৳৫০ ×</span>
                 <div className="flex items-center gap-1.5">
                   <input
-                    type="number"
-                    min="0"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="০"
-                    value={noteCounts.note50 || ''}
+                    value={noteCounts.note50 ? formatTypingNumber(noteCounts.note50, false, useBengali) : ''}
                     onChange={(e) => updateNoteCount('note50', e.target.value)}
-                    className="w-14 text-center font-black p-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded text-xs"
+                    className="w-14 text-center font-black p-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-xs"
                   />
                   <span className="text-[10px] text-stone-500 w-12 text-right font-bold">
                     ৳{toBengaliNumber(counted50, useBengali)}
@@ -597,16 +555,16 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
               </div>
 
               {/* 20 Tk */}
-              <div className="flex items-center justify-between p-1.5 bg-stone-50 dark:bg-stone-850 rounded-lg border border-stone-200/70 dark:border-stone-750">
+              <div className="flex items-center justify-between p-2 soft-inset rounded-xl border">
                 <span className="font-bold text-stone-700 dark:text-stone-300">৳২০ ×</span>
                 <div className="flex items-center gap-1.5">
                   <input
-                    type="number"
-                    min="0"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="০"
-                    value={noteCounts.note20 || ''}
+                    value={noteCounts.note20 ? formatTypingNumber(noteCounts.note20, false, useBengali) : ''}
                     onChange={(e) => updateNoteCount('note20', e.target.value)}
-                    className="w-14 text-center font-black p-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded text-xs"
+                    className="w-14 text-center font-black p-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-xs"
                   />
                   <span className="text-[10px] text-stone-500 w-12 text-right font-bold">
                     ৳{toBengaliNumber(counted20, useBengali)}
@@ -615,16 +573,16 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
               </div>
 
               {/* 10 Tk */}
-              <div className="flex items-center justify-between p-1.5 bg-stone-50 dark:bg-stone-850 rounded-lg border border-stone-200/70 dark:border-stone-750">
+              <div className="flex items-center justify-between p-2 soft-inset rounded-xl border">
                 <span className="font-bold text-stone-700 dark:text-stone-300">৳১০ ×</span>
                 <div className="flex items-center gap-1.5">
                   <input
-                    type="number"
-                    min="0"
+                    type="text"
+                    inputMode="numeric"
                     placeholder="০"
-                    value={noteCounts.note10 || ''}
+                    value={noteCounts.note10 ? formatTypingNumber(noteCounts.note10, false, useBengali) : ''}
                     onChange={(e) => updateNoteCount('note10', e.target.value)}
-                    className="w-14 text-center font-black p-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded text-xs"
+                    className="w-14 text-center font-black p-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-xs"
                   />
                   <span className="text-[10px] text-stone-500 w-12 text-right font-bold">
                     ৳{toBengaliNumber(counted10, useBengali)}
@@ -643,7 +601,7 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
               </div>
 
               {totalCountedCash > 0 && (
-                <div className={`p-2 rounded-xl text-xs flex items-center gap-2 ${
+                <div className={`p-2.5 rounded-xl text-xs flex items-center gap-2 shadow-xs ${
                   cashDifference === 0
                     ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-200 border border-emerald-300'
                     : cashDifference > 0
@@ -681,8 +639,8 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
 
       {/* --- MODAL: ADD EXPENSE --- */}
       {isAddExpenseModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3">
-          <div className="bg-white dark:bg-stone-900 rounded-2xl max-w-sm w-full p-3.5 border border-stone-200 dark:border-stone-800 shadow-2xl space-y-2.5 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-3">
+          <div className="material-card max-w-sm w-full p-4 border shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-2">
               <h3 className="text-xs font-black text-stone-950 dark:text-stone-50 flex items-center gap-1.5">
                 <TrendingDown className="w-4 h-4 text-rose-600" />
@@ -715,11 +673,12 @@ export const ExpensesView: React.FC<ExpensesViewProps> = ({
                 <div className="relative">
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-black text-stone-500">৳</span>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     required
                     placeholder="টাকার পরিমাণ লিখুন"
                     value={newAmount}
-                    onChange={(e) => setNewAmount(e.target.value)}
+                    onChange={(e) => setNewAmount(formatTypingNumber(e.target.value, false, useBengali))}
                     className="w-full text-sm font-black pl-6 pr-2.5 py-2 border border-rose-400 rounded-lg bg-white dark:bg-stone-800 text-stone-950 dark:text-stone-50"
                   />
                 </div>

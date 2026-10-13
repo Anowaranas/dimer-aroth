@@ -3,8 +3,57 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
+  :root {
+    --color-canvas: #f8fafc;
+    --color-surface: #ffffff;
+    --color-surface-elevated: #ffffff;
+    --color-surface-card: #ffffff;
+    --border-subtle: rgba(226, 232, 240, 0.85);
+
+    /* Cross-platform safe area insets for iOS (Notch & Dynamic Island) and Android gesture bar */
+    --sat: env(safe-area-inset-top, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+  }
+
+  .dark {
+    --color-canvas: #0b0f19;
+    --color-surface: #111827;
+    --color-surface-elevated: #162032;
+    --color-surface-card: #131c2e;
+    --border-subtle: rgba(30, 41, 59, 0.75);
+  }
+
+  /* Safe Area Helper Utilities for Mobile and Tablet */
+  .safe-area-pt {
+    padding-top: max(var(--sat), 0px);
+  }
+  .safe-area-pb {
+    padding-bottom: max(var(--sab), 10px);
+  }
+  .safe-area-pl {
+    padding-left: max(var(--sal), 0px);
+  }
+  .safe-area-pr {
+    padding-right: max(var(--sar), 0px);
+  }
+  .safe-area-px {
+    padding-left: max(var(--sal), 0px);
+    padding-right: max(var(--sar), 0px);
+  }
+
+  /* Prevent automatic viewport zoom on iOS Safari when tapping inputs */
+  @media (max-width: 640px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
   html {
-    font-size: 18.85px;
+    font-size: 20px;
     -webkit-text-size-adjust: 100%;
     touch-action: manipulation;
     scroll-behavior: smooth;
@@ -12,12 +61,13 @@
   }
 
   *, ::before, ::after {
-    font-family: 'Anek Bangla', 'Hind Siliguri', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Anek Bangla', 'Hind Siliguri', 'Tiro Bangla', 'Noto Sans Bengali', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-tap-highlight-color: transparent;
+    font-feature-settings: "tnum" on, "lnum" on;
   }
 
   body {
-    font-family: 'Anek Bangla', 'Hind Siliguri', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Anek Bangla', 'Hind Siliguri', 'Tiro Bangla', 'Noto Sans Bengali', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -25,12 +75,521 @@
     font-weight: 500;
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
+    background-color: var(--color-canvas);
+    font-variant-numeric: tabular-nums lining-nums;
   }
 
+  .num-font, .font-number, .tabular-nums {
+    font-family: 'Hind Siliguri', 'Anek Bangla', 'Noto Sans Bengali', 'Tiro Bangla', sans-serif !important;
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" on, "lnum" on;
+    letter-spacing: -0.01em;
+  }
+
+  /* ========================================================
+     UNIVERSAL SOFT UI UX SYSTEM FOR ALL BUTTONS
+     ======================================================== */
   button, input, select, textarea {
     font-family: inherit;
     letter-spacing: inherit;
     touch-action: manipulation;
+  }
+
+  button {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.18s ease,
+                border-color 0.18s ease,
+                color 0.15s ease,
+                filter 0.16s ease;
+  }
+
+  /* Universal Soft UI Hover Lift & Subtle Illumination */
+  button:not(:disabled):hover {
+    filter: brightness(1.03);
+  }
+
+  /* Universal Soft UI Tactile Depressed / Cushioned Click Feedback */
+  button:not(:disabled):active {
+    transform: scale(0.965) translateY(1px) !important;
+    filter: brightness(0.96);
+  }
+
+  /* Disabled State */
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none !important;
+    filter: grayscale(0.2);
+  }
+
+  /* Tactile Micro-interaction Class */
+  .tactile-tap {
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), filter 0.15s ease;
+  }
+  .tactile-tap:active {
+    transform: scale(0.96) translateY(1px) !important;
+  }
+
+  /* Soft UI Gradient & Vibrant Solid Buttons: Dual Shadow + Top Highlight Bevel */
+  button.bg-gradient-to-r,
+  button.bg-gradient-to-tr,
+  button.bg-gradient-to-br,
+  button[class*="from-blue-"],
+  button[class*="from-indigo-"],
+  button[class*="from-purple-"],
+  button[class*="from-emerald-"],
+  button[class*="from-amber-"],
+  button[class*="from-rose-"],
+  button.bg-blue-600,
+  button.bg-indigo-600,
+  button.bg-emerald-600,
+  button.bg-rose-600,
+  button.bg-amber-600,
+  button.bg-purple-600 {
+    box-shadow: 
+      0 4px 14px -1px rgba(15, 23, 42, 0.18),
+      0 2px 5px -1px rgba(15, 23, 42, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  }
+
+  button.bg-gradient-to-r:hover,
+  button.bg-gradient-to-tr:hover,
+  button.bg-gradient-to-br:hover,
+  button[class*="from-blue-"]:hover,
+  button[class*="from-indigo-"]:hover,
+  button[class*="from-purple-"]:hover,
+  button[class*="from-emerald-"]:hover,
+  button[class*="from-amber-"]:hover,
+  button[class*="from-rose-"]:hover,
+  button.bg-blue-600:hover,
+  button.bg-indigo-600:hover,
+  button.bg-emerald-600:hover,
+  button.bg-rose-600:hover,
+  button.bg-amber-600:hover,
+  button.bg-purple-600:hover {
+    box-shadow: 
+      0 8px 24px -2px rgba(15, 23, 42, 0.25),
+      0 3px 8px -1px rgba(15, 23, 42, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+  }
+
+  button.bg-gradient-to-r:active,
+  button.bg-gradient-to-tr:active,
+  button.bg-gradient-to-br:active,
+  button[class*="from-blue-"]:active,
+  button[class*="from-indigo-"]:active,
+  button[class*="from-purple-"]:active,
+  button[class*="from-emerald-"]:active,
+  button[class*="from-amber-"]:active,
+  button[class*="from-rose-"]:active,
+  button.bg-blue-600:active,
+  button.bg-indigo-600:active,
+  button.bg-emerald-600:active,
+  button.bg-rose-600:active,
+  button.bg-amber-600:active,
+  button.bg-purple-600:active {
+    box-shadow: 
+      0 2px 6px -1px rgba(15, 23, 42, 0.15),
+      inset 0 2px 5px rgba(0, 0, 0, 0.25) !important;
+    transform: scale(0.965) translateY(1px) !important;
+  }
+
+  /* Universal Soft UI Surface / Light Neutral Buttons */
+  button[class*="bg-white"],
+  button[class*="bg-stone-100"],
+  button[class*="bg-slate-100"],
+  button[class*="bg-blue-50"],
+  button[class*="bg-indigo-50"],
+  button[class*="bg-emerald-50"],
+  button[class*="bg-amber-50"],
+  button[class*="bg-rose-50"],
+  button[class*="bg-stone-200"],
+  button[class*="bg-slate-200"] {
+    box-shadow: 
+      0 2px 8px -1px rgba(15, 23, 42, 0.07),
+      0 1px 3px 0 rgba(15, 23, 42, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  }
+
+  .dark button[class*="bg-white"],
+  .dark button[class*="bg-stone-800"],
+  .dark button[class*="bg-slate-800"],
+  .dark button[class*="bg-stone-750"],
+  .dark button[class*="bg-stone-700"],
+  .dark button[class*="bg-slate-700"],
+  .dark button[class*="bg-blue-950"],
+  .dark button[class*="bg-indigo-950"],
+  .dark button[class*="bg-emerald-950"],
+  .dark button[class*="bg-rose-950"] {
+    box-shadow: 
+      0 3px 12px -1px rgba(0, 0, 0, 0.45),
+      0 1px 3px 0 rgba(0, 0, 0, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  button[class*="bg-white"]:active,
+  button[class*="bg-stone-100"]:active,
+  button[class*="bg-slate-100"]:active,
+  button[class*="bg-blue-50"]:active,
+  button[class*="bg-indigo-50"]:active,
+  button[class*="bg-emerald-50"]:active,
+  button[class*="bg-amber-50"]:active,
+  button[class*="bg-rose-50"]:active,
+  button[class*="bg-stone-200"]:active,
+  button[class*="bg-slate-200"]:active {
+    box-shadow: 
+      inset 0 2px 4px rgba(15, 23, 42, 0.12),
+      0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  }
+
+  .dark button[class*="bg-white"]:active,
+  .dark button[class*="bg-stone-800"]:active,
+  .dark button[class*="bg-slate-800"]:active,
+  .dark button[class*="bg-stone-750"]:active,
+  .dark button[class*="bg-stone-700"]:active,
+  .dark button[class*="bg-slate-700"]:active,
+  .dark button[class*="bg-blue-950"]:active,
+  .dark button[class*="bg-indigo-950"]:active,
+  .dark button[class*="bg-emerald-950"]:active,
+  .dark button[class*="bg-rose-950"]:active {
+    box-shadow: 
+      inset 0 2px 6px rgba(0, 0, 0, 0.6),
+      0 1px 2px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  /* Modern Refined Surface & Card Elevation */
+  .minimal-card {
+    background-color: var(--color-surface);
+    border-radius: 1rem;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .minimal-card:hover {
+    box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+    border-color: rgba(203, 213, 225, 0.95);
+  }
+
+  .dark .minimal-card:hover {
+    box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.4);
+    border-color: rgba(71, 85, 105, 0.8);
+  }
+
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+  }
+
+  .dark .glass-panel {
+    background: rgba(17, 24, 39, 0.88);
+    border-color: rgba(51, 65, 85, 0.55);
+  }
+
+  /* Modern Material Design (Material 3) & Soft UI (Neumorphism / Smooth Surface) System */
+  .glass-card,
+  .soft-card,
+  .minimal-card {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-radius: 1.25rem;
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    box-shadow: 
+      0 4px 20px -2px rgba(15, 23, 42, 0.05),
+      0 1px 3px 0 rgba(15, 23, 42, 0.03),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+  }
+
+  .dark .glass-card,
+  .dark .soft-card,
+  .dark .minimal-card {
+    background: rgba(15, 23, 42, 0.82);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-radius: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 
+      0 6px 26px -2px rgba(0, 0, 0, 0.48),
+      0 1px 4px 0 rgba(0, 0, 0, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  }
+
+  .glass-card:hover,
+  .soft-card:hover,
+  .minimal-card:hover {
+    box-shadow: 
+      0 12px 30px -4px rgba(15, 23, 42, 0.09),
+      0 3px 8px -1px rgba(15, 23, 42, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 1);
+    border-color: rgba(203, 213, 225, 0.95);
+  }
+
+  .dark .glass-card:hover,
+  .dark .soft-card:hover,
+  .dark .minimal-card:hover {
+    box-shadow: 
+      0 14px 34px -4px rgba(0, 0, 0, 0.65),
+      0 3px 10px 0 rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  /* Soft UI Recessed Wells (Segmented Controls, Trays & Input Wells) */
+  .soft-inset {
+    background: rgba(241, 245, 249, 0.8);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 
+      inset 0 2px 4px 0 rgba(15, 23, 42, 0.04),
+      inset 0 1px 2px 0 rgba(15, 23, 42, 0.02);
+  }
+
+  .dark .soft-inset {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 
+      inset 0 2px 6px 0 rgba(0, 0, 0, 0.45),
+      inset 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  /* Modern Material 3 Elevated Surface & Dialogs */
+  .material-card,
+  .soft-elevated {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 1.5rem;
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    box-shadow: 
+      0 12px 36px -4px rgba(15, 23, 42, 0.09),
+      0 4px 12px -2px rgba(15, 23, 42, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .dark .material-card,
+  .dark .soft-elevated {
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 
+      0 16px 44px -4px rgba(0, 0, 0, 0.7),
+      0 4px 14px -1px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  }
+
+  /* ========================================================
+     DEDICATED SOFT UI UX BUTTON SYSTEM
+     ======================================================== */
+  .soft-btn,
+  .soft-ui-btn {
+    position: relative;
+    border-radius: 0.875rem;
+    padding: 0.625rem 1rem;
+    font-weight: 800;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    user-select: none;
+    touch-action: manipulation;
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    color: #1e293b;
+    box-shadow: 
+      0 4px 14px -2px rgba(15, 23, 42, 0.08),
+      0 1px 3px 0 rgba(15, 23, 42, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .dark .soft-btn,
+  .dark .soft-ui-btn {
+    background: rgba(30, 41, 59, 0.85);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #f1f5f9;
+    box-shadow: 
+      0 4px 16px -2px rgba(0, 0, 0, 0.45),
+      0 1px 3px 0 rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .soft-btn:hover,
+  .soft-ui-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 
+      0 8px 20px -2px rgba(15, 23, 42, 0.12),
+      0 2px 6px -1px rgba(15, 23, 42, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 1);
+  }
+
+  .dark .soft-btn:hover,
+  .dark .soft-ui-btn:hover {
+    box-shadow: 
+      0 8px 24px -2px rgba(0, 0, 0, 0.6),
+      0 2px 6px 0 rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  .soft-btn:active,
+  .soft-ui-btn:active {
+    transform: scale(0.965) translateY(1px) !important;
+    box-shadow: 
+      inset 0 2px 4px 0 rgba(15, 23, 42, 0.14),
+      0 1px 2px 0 rgba(15, 23, 42, 0.04) !important;
+  }
+
+  .dark .soft-btn:active,
+  .dark .soft-ui-btn:active {
+    box-shadow: 
+      inset 0 2px 6px 0 rgba(0, 0, 0, 0.6),
+      0 1px 2px 0 rgba(0, 0, 0, 0.2) !important;
+  }
+
+  /* Vibrant Soft UI Buttons */
+  .soft-btn-primary,
+  .soft-ui-btn-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #1d4ed8 100%) !important;
+    border-color: rgba(59, 130, 246, 0.5) !important;
+    color: #ffffff !important;
+    box-shadow: 
+      0 6px 20px -2px rgba(37, 99, 235, 0.42),
+      0 2px 6px -1px rgba(37, 99, 235, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .soft-btn-primary:hover,
+  .soft-ui-btn-primary:hover {
+    box-shadow: 
+      0 10px 28px -2px rgba(37, 99, 235, 0.5),
+      0 4px 10px -1px rgba(37, 99, 235, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+  }
+
+  .soft-btn-primary:active,
+  .soft-ui-btn-primary:active {
+    box-shadow: 
+      0 2px 6px -1px rgba(37, 99, 235, 0.3),
+      inset 0 2px 5px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  .soft-btn-emerald,
+  .soft-ui-btn-emerald,
+  .soft-btn-success,
+  .soft-ui-btn-success {
+    background: linear-gradient(135deg, #059669 0%, #10b981 50%, #047857 100%) !important;
+    border-color: rgba(16, 185, 129, 0.5) !important;
+    color: #ffffff !important;
+    box-shadow: 
+      0 6px 20px -2px rgba(16, 185, 129, 0.42),
+      0 2px 6px -1px rgba(16, 185, 129, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .soft-btn-emerald:hover,
+  .soft-ui-btn-emerald:hover {
+    box-shadow: 
+      0 10px 28px -2px rgba(16, 185, 129, 0.5),
+      0 4px 10px -1px rgba(16, 185, 129, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+  }
+
+  .soft-btn-danger,
+  .soft-ui-btn-danger,
+  .soft-btn-rose,
+  .soft-ui-btn-rose {
+    background: linear-gradient(135deg, #e11d48 0%, #f43f5e 50%, #be123c 100%) !important;
+    border-color: rgba(244, 63, 94, 0.5) !important;
+    color: #ffffff !important;
+    box-shadow: 
+      0 6px 20px -2px rgba(244, 63, 94, 0.42),
+      0 2px 6px -1px rgba(244, 63, 94, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .soft-btn-purple,
+  .soft-ui-btn-purple,
+  .soft-btn-indigo,
+  .soft-ui-btn-indigo {
+    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #6d28d9 100%) !important;
+    border-color: rgba(139, 92, 246, 0.5) !important;
+    color: #ffffff !important;
+    box-shadow: 
+      0 6px 20px -2px rgba(139, 92, 246, 0.42),
+      0 2px 6px -1px rgba(139, 92, 246, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .soft-btn-amber,
+  .soft-ui-btn-amber,
+  .soft-btn-warning,
+  .soft-ui-btn-warning {
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 50%, #b45309 100%) !important;
+    border-color: rgba(245, 158, 11, 0.5) !important;
+    color: #ffffff !important;
+    box-shadow: 
+      0 6px 20px -2px rgba(245, 158, 11, 0.42),
+      0 2px 6px -1px rgba(245, 158, 11, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .soft-btn-icon,
+  .soft-ui-btn-icon {
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 
+      0 3px 10px -1px rgba(15, 23, 42, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .dark .soft-btn-icon,
+  .dark .soft-ui-btn-icon {
+    box-shadow: 
+      0 3px 10px -1px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Material 3 & Soft UI Expressive FAB & Tactile Buttons */
+  .soft-fab {
+    box-shadow: 
+      0 10px 28px -2px rgba(37, 99, 235, 0.42),
+      0 3px 8px 0 rgba(37, 99, 235, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s ease;
+  }
+
+  .soft-fab:active {
+    transform: scale(0.93) translateY(1px);
+    box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .material-ripple {
+    position: relative;
+    overflow: hidden;
+    transition: background-color 0.2s cubic-bezier(0.2, 0, 0, 1), transform 0.12s cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .material-ripple:active {
+    transform: scale(0.975);
   }
 
   /* GPU accelerated modal & card animations */
@@ -39,6 +598,206 @@
     backface-visibility: hidden;
     perspective: 1000px;
     will-change: transform, opacity;
+  }
+
+  /* Sleek, Modern Custom Scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.7);
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.32);
+  }
+
+  /* Modal Spring Enter Animation */
+  @keyframes modalPop {
+    0% {
+      opacity: 0;
+      transform: scale(0.95) translateY(6px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .modal-enter {
+    animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Animated Search scanning laser effect from user reference */
+  @keyframes scanline {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+
+  .animate-scanline {
+    animation: scanline 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  /* ========================================================
+     PREMIUM TABLE & TABLE-CARD SYSTEM (FROM USER SPECIFICATION)
+     ======================================================== */
+  .table-card.premium-card,
+  .table-card {
+    background: #ffffff;
+    border-radius: 1.25rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+    overflow: hidden;
+    transition: all 0.25s ease;
+  }
+
+  .dark .table-card.premium-card,
+  .dark .table-card {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 12px 36px -5px rgba(0, 0, 0, 0.6);
+  }
+
+  .table-toolbar {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #fafbfc;
+    border-bottom: 1px solid #edf2f8;
+  }
+
+  .dark .table-toolbar {
+    background: rgba(15, 23, 42, 0.7);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .table-toolbar .search-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04);
+    flex: 1;
+    max-width: 340px;
+  }
+
+  .dark .table-toolbar .search-box {
+    background: rgba(30, 41, 59, 0.85);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .table-toolbar .search-box input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13.5px;
+    font-weight: 500;
+    width: 100%;
+    color: inherit;
+  }
+
+  /* .premium-table (Exact styling from user screenshot) */
+  .premium-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 15px;
+  }
+
+  .premium-table thead th {
+    padding: 12px 16px;
+    background: #2f80ed;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  @media (min-width: 640px) {
+    .premium-table thead th {
+      padding: 16px 20px;
+      font-size: 16.5px;
+    }
+  }
+
+  .premium-table tbody tr {
+    transition: background 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+  }
+
+  .premium-table tbody tr:hover {
+    background: rgba(29, 140, 255, 0.05);
+    transform: translateY(-3px);
+  }
+
+  .dark .premium-table tbody tr:hover {
+    background: rgba(47, 128, 237, 0.12);
+    transform: translateY(-3px);
+  }
+
+  .premium-table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #edf2f8;
+    color: #444;
+    font-size: 15px;
+  }
+
+  @media (min-width: 640px) {
+    .premium-table tbody td {
+      padding: 16px 20px;
+      font-size: 16.5px;
+    }
+  }
+
+  .dark .premium-table tbody td {
+    border-bottom-color: rgba(255, 255, 255, 0.07);
+    color: #e2e8f0;
+  }
+  /* ========================================================
+     MEMO & CHALAN 7% LARGER TYPOGRAPHY ENHANCEMENT
+     (মেমো ও চালান এর লেখা ও সংখ্যা ৭% বড়)
+     ======================================================== */
+  #printable-voucher-paper,
+  #printable-chalan-paper,
+  #printable-khatian-paper,
+  #printable-supplier-khatian-paper {
+    font-size: 1.07em !important;
+    line-height: 1.45 !important;
+  }
+
+  #printable-voucher-paper table,
+  #printable-chalan-paper table {
+    font-size: 1.07em !important;
+  }
+
+  #printable-voucher-paper .tabular-nums,
+  #printable-chalan-paper .tabular-nums {
+    letter-spacing: 0.015em;
   }
 }
 
@@ -56,66 +815,26 @@
   }
 
   /* Hide everything on page except the memo modal */
-  header, nav, #bottom-nav-bar, #all-memos-view-container, #dashboard-container, #parties-container, #settings-container {
+  body > * {
     display: none !important;
   }
 
-  .print\:hidden {
-    display: none !important;
+  #printable-voucher,
+  #printable-voucher * {
+    visibility: visible !important;
   }
 
-  #memo-voucher-backdrop {
-    position: static !important;
-    background: transparent !important;
-    padding: 0 !important;
-    margin: 0 !important;
+  #printable-voucher {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
     display: block !important;
-    inset: auto !important;
-  }
-
-  #memo-voucher-card {
-    border: none !important;
-    box-shadow: none !important;
-    max-height: none !important;
-    overflow: visible !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    background: transparent !important;
-  }
-
-  #printable-memo-content {
+    margin: 0 !important;
     padding: 0 !important;
-    background: transparent !important;
-    overflow: visible !important;
-  }
-
-  #printable-voucher-paper,
-  #printable-chalan-paper,
-  #printable-khatian-paper,
-  #printable-supplier-khatian-paper {
+    background: #ffffff !important;
+    color: #000000 !important;
     box-shadow: none !important;
-    margin: 0 auto !important;
-    page-break-inside: avoid !important;
-    width: 100% !important;
-    max-width: 580px !important;
+    border: none !important;
   }
 }
-
-@keyframes loading-bar {
-  0% {
-    width: 0%;
-  }
-  20% {
-    width: 15%;
-  }
-  50% {
-    width: 65%;
-  }
-  80% {
-    width: 85%;
-  }
-  100% {
-    width: 100%;
-  }
-}
-

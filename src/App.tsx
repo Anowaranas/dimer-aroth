@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, X } from 'lucide-react';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import { Sun, Moon, HelpCircle } from 'lucide-react';
 import { 
   INITIAL_BASE_RATE, 
   INITIAL_MEMOS, 
@@ -24,6 +26,8 @@ import {
   ExpenseRecord 
 } from './types';
 import { BottomNav, TabType } from './components/BottomNav';
+import { AppHeader } from './components/AppHeader';
+import { OnboardingGuideModal } from './components/OnboardingGuideModal';
 import { DashboardView } from './components/DashboardView';
 import { UnifiedKhataView, KhataSubTab } from './components/UnifiedKhataView';
 import { AllMemosView } from './components/AllMemosView';
@@ -38,6 +42,7 @@ import { LoginModal } from './components/LoginModal';
 import { CloudBackupModal } from './components/CloudBackupModal';
 import { PartyDetailsModal } from './components/PartyDetailsModal';
 import { SupplierDetailsModal } from './components/SupplierDetailsModal';
+import { RateChangeModal } from './components/RateChangeModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { performOnlineBackup, isAutoCloudSyncEnabled } from './utils/cloudSync';
 import { ensureAuthenticatedUser } from './lib/firebase';
@@ -72,6 +77,39 @@ export default function App() {
 
   // Periodic module-level check for Firestore quota-exceeded & offline connection status
   useEffect(() => {
+    // Proactively check for app updates and refresh if a new service worker is installed
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((reg) => {
+        reg.update().catch(() => {});
+      });
+
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          navigator.serviceWorker.ready.then((reg) => {
+            reg.update().catch(() => {});
+          });
+        }
+      };
+
+      let refreshing = false;
+      const handleControllerChange = () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      };
+
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+      };
+    }
+  }, []);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       if (isFirestoreQuotaExceeded) {
         setHasQuotaError(true);
@@ -82,6 +120,8 @@ export default function App() {
     }, 2000);
     return () => clearInterval(interval);
   }, []);
+
+
 
   // App Data with LocalStorage Persistence - Clean empty state
   const [shopProfile, setShopProfile] = useState<ShopProfile>(() => {
@@ -217,6 +257,103 @@ export default function App() {
   const [viewingSupplierDetails, setViewingSupplierDetails] = useState<Supplier | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const [isCloudBackupModalOpen, setIsCloudBackupModalOpen] = useState<boolean>(false);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState<boolean>(false);
+  const [isRateChangeModalOpen, setIsRateChangeModalOpen] = useState<boolean>(false);
+
+  // Mobile Back Button Handler & Double Tap to Exit
+  const [exitToastMessage, setExitToastMessage] = useState<string | null>(null);
+  const lastBackPressTime = React.useRef<number>(0);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.history.state === null) {
+      window.history.pushState({ page: 'main' }, '', window.location.href);
+    }
+
+    const handlePopState = () => {
+      window.history.pushState({ page: 'main' }, '', window.location.href);
+
+      if (isGuideModalOpen) {
+        setIsGuideModalOpen(false);
+        return;
+      }
+      if (viewingSupplierDetails) {
+        setViewingSupplierDetails(null);
+        return;
+      }
+      if (viewingPartyDetails) {
+        setViewingPartyDetails(null);
+        return;
+      }
+      if (isCloudBackupModalOpen) {
+        setIsCloudBackupModalOpen(false);
+        return;
+      }
+      if (isLoginModalOpen) {
+        setIsLoginModalOpen(false);
+        return;
+      }
+      if (activeShareMemo) {
+        setActiveShareMemo(null);
+        return;
+      }
+      if (paymentModalParty) {
+        setPaymentModalParty(null);
+        return;
+      }
+      if (activeChalanVoucher) {
+        setActiveChalanVoucher(null);
+        return;
+      }
+      if (isNewChalanModalOpen) {
+        setIsNewChalanModalOpen(false);
+        setSelectedSupplierForNewChalan(null);
+        setNewChalanInitialDate(undefined);
+        return;
+      }
+      if (activeVoucherMemo) {
+        setActiveVoucherMemo(null);
+        return;
+      }
+      if (isNewMemoModalOpen) {
+        setIsNewMemoModalOpen(false);
+        setSelectedPartyForNewMemo(null);
+        setNewMemoInitialDate(undefined);
+        return;
+      }
+
+      if (activeTab !== 'dashboard') {
+        setActiveTab('dashboard');
+        return;
+      }
+
+      const now = Date.now();
+      if (now - lastBackPressTime.current < 2000) {
+        window.history.go(-2);
+      } else {
+        lastBackPressTime.current = now;
+        setExitToastMessage('অ্যাপ থেকে বের হতে আবার ব্যাক বাটন চাপুন');
+        setTimeout(() => setExitToastMessage(null), 2500);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [
+    isGuideModalOpen,
+    viewingSupplierDetails,
+    viewingPartyDetails,
+    isCloudBackupModalOpen,
+    isLoginModalOpen,
+    activeShareMemo,
+    paymentModalParty,
+    activeChalanVoucher,
+    isNewChalanModalOpen,
+    activeVoucherMemo,
+    isNewMemoModalOpen,
+    activeTab
+  ]);
 
   // Cloud Data Notification Toast Banner
   const [cloudNotification, setCloudNotification] = useState<{
@@ -264,6 +401,12 @@ export default function App() {
     setViewingSupplierDetails(null);
     setIsLoginModalOpen(false);
     setIsCloudBackupModalOpen(false);
+    setIsGuideModalOpen(false);
+  };
+
+  const handleOpenGuideModal = () => {
+    closeAllModals();
+    setIsGuideModalOpen(true);
   };
 
   const handleOpenNewMemo = (party?: Party | null, date?: string) => {
@@ -1252,12 +1395,25 @@ export default function App() {
   const hasDueNotification = parties.some((p) => p.currentDue > 0) || suppliers.some((s) => s.totalPayable > 0);
 
   return (
-    <div className={`${darkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900'} min-h-screen transition-colors`}>
-      {/* Responsive App View Wrapper - comfortable on desktop, tablet and mobile */}
-      <div className="max-w-xl md:max-w-2xl mx-auto min-h-screen bg-white dark:bg-slate-900 shadow-xl flex flex-col relative border-x border-slate-200/90 dark:border-slate-800">
+    <div className={`${darkMode ? 'dark bg-[#080d18] text-slate-100' : 'bg-[#f1f5f9] text-slate-900'} min-h-screen transition-colors`}>
+      {/* Responsive App View Wrapper - seamlessly adapts from small phones to tablets and desktop */}
+      <div className="w-full max-w-xl sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto min-h-screen bg-white dark:bg-[#0c1222] shadow-2xl flex flex-col relative border-x border-slate-200/80 dark:border-slate-800/80 safe-area-px transition-all">
         
-
-        
+        {/* Top Global App Header */}
+        <AppHeader
+          shopProfile={shopProfile}
+          authUser={authUser}
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+          useBengali={useBengali}
+          setUseBengali={setUseBengali}
+          isRefreshingCloud={isRefreshingCloud}
+          onRefreshCloud={handleManualCloudRefresh}
+          onOpenCloudModal={handleOpenCloudBackupModal}
+          onOpenLoginModal={handleOpenLoginModal}
+          onOpenGuideModal={handleOpenGuideModal}
+          onOpenSettings={() => handleTabChange('settings')}
+        />
         {/* Cloud Notification Toast Banner */}
         {cloudNotification && (
           <div
@@ -1269,14 +1425,14 @@ export default function App() {
             }`}
           >
             <div className="flex items-center gap-2 pr-1">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <CheckCircleRoundedIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>{cloudNotification.message}</span>
             </div>
             <button
               onClick={() => setCloudNotification(null)}
               className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-stone-500"
             >
-              <X className="w-3.5 h-3.5" />
+              <CloseRoundedIcon className="w-4 h-4" />
             </button>
           </div>
         )}
@@ -1318,7 +1474,7 @@ export default function App() {
               onClick={() => setHasQuotaError(false)}
               className="absolute right-2 top-2 p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-rose-700 dark:text-rose-300"
             >
-              <X className="w-3.5 h-3.5" />
+              <CloseRoundedIcon className="w-4 h-4" />
             </button>
           </div>
         )}
@@ -1342,13 +1498,13 @@ export default function App() {
               onClick={() => setHasOfflineNotice(false)}
               className="absolute right-2 top-2 p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg text-indigo-700 dark:text-indigo-300"
             >
-              <X className="w-3.5 h-3.5" />
+              <CloseRoundedIcon className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        {/* Main Content Area - instant, zero-delay rendering */}
-        <main className="flex-1 p-1 sm:p-1.5">
+        {/* Main Content Area - instant, responsive rendering from small phones to tablets */}
+        <main className="flex-1 p-1 sm:p-2 md:p-3.5 lg:p-4">
           {activeTab === 'dashboard' && (
             <DashboardView
               shopProfile={shopProfile}
@@ -1372,12 +1528,13 @@ export default function App() {
                 handleTabChange('khata');
                 setKhataSubTab('suppliers');
               }}
-              onOpenRateSettings={() => handleTabChange('settings')}
+              onOpenRateSettings={() => setIsRateChangeModalOpen(true)}
               onOpenShareModal={(memo) => handleOpenShareModal(memo)}
               onDeleteMemo={handleDeleteMemo}
               onDeleteChalan={handleDeleteChalan}
               onOpenPartyDetails={(party) => handleOpenPartyDetails(party)}
               onOpenSupplierDetails={(supplier) => handleOpenSupplierDetails(supplier)}
+              onOpenGuide={handleOpenGuideModal}
             />
           )}
 
@@ -1453,6 +1610,13 @@ export default function App() {
             />
           )}
         </main>
+
+        {/* Exit Toast Notification */}
+        {exitToastMessage && (
+          <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl text-base font-medium flex items-center gap-2 animate-bounce border border-slate-700">
+            <span>{exitToastMessage}</span>
+          </div>
+        )}
 
         {/* Offline Connectivity Notification Banner */}
         <OfflineIndicator />
@@ -1620,6 +1784,29 @@ export default function App() {
             onDeleteSupplier={handleDeleteSupplier}
             onDeleteChalan={handleDeleteChalan}
             onUpdateSupplier={handleUpdateSupplier}
+          />
+        )}
+
+        {/* Onboarding Guide & Tips Modal */}
+        {isGuideModalOpen && (
+          <OnboardingGuideModal
+            isOpen={isGuideModalOpen}
+            onClose={() => setIsGuideModalOpen(false)}
+            onOpenNewMemo={() => handleOpenNewMemo()}
+            onOpenNewChalan={() => handleOpenNewChalan()}
+          />
+        )}
+
+        {/* Rate Change Modal */}
+        {isRateChangeModalOpen && (
+          <RateChangeModal
+            isOpen={isRateChangeModalOpen}
+            baseRate={baseRate}
+            useBengali={useBengali}
+            onClose={() => setIsRateChangeModalOpen(false)}
+            onSaveRate={(updated) => {
+              setBaseRate(updated);
+            }}
           />
         )}
       </div>

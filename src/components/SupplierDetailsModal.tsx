@@ -9,6 +9,7 @@ import {
 import { getPartyColorTheme } from '../utils/partyColors';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { downloadElementAsImage } from '../utils/shareUtils';
+import { hapticCancel, hapticDelete } from '../utils/haptics';
 import { 
   X, 
   Phone, 
@@ -202,7 +203,7 @@ export const SupplierDetailsModal: React.FC<SupplierDetailsModalProps> = ({
     >
       <div 
         id="supplier-details-card"
-        className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] border border-slate-200 dark:border-slate-800"
+        className="soft-elevated modal-enter w-full max-w-2xl lg:max-w-3xl rounded-3xl overflow-hidden flex flex-col max-h-[95vh] border border-slate-200/80 dark:border-white/10"
       >
         {/* Color accent strip (পার্টির খাতার মতো হুবহু সেম) */}
         <div className={`h-2 w-full bg-gradient-to-r ${theme.headerBar}`}></div>
@@ -234,7 +235,10 @@ export const SupplierDetailsModal: React.FC<SupplierDetailsModalProps> = ({
             {onDeleteSupplier && !supplier.id.startsWith('temp-') && (
               <button
                 type="button"
-                onClick={() => setShowDeleteConfirm(true)}
+                onClick={() => {
+                  hapticCancel();
+                  setShowDeleteConfirm(true);
+                }}
                 title="মহাজন ডিলিট করুন"
                 className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg transition"
               >
@@ -242,7 +246,10 @@ export const SupplierDetailsModal: React.FC<SupplierDetailsModalProps> = ({
               </button>
             )}
             <button
-              onClick={onClose}
+              onClick={() => {
+                hapticCancel();
+                onClose();
+              }}
               className="p-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition"
             >
               <X className="w-4 h-4" />
@@ -444,21 +451,21 @@ export const SupplierDetailsModal: React.FC<SupplierDetailsModalProps> = ({
             )}
           </div>
 
-          {/* 3. Compact Financials Summary Strip */}
-          <div className="grid grid-cols-3 gap-1.5 text-center p-1.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
-            <div>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block">মোট ক্রয়</span>
+          {/* 3. Compact Financials Summary Strip - Modern Glassmorphism */}
+          <div className="grid grid-cols-3 gap-2 text-center p-2.5 glass-card rounded-2xl border shadow-xs">
+            <div className="p-1 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40">
+              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold block">মোট ক্রয়</span>
               <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tabular-nums">
                 {toBnCurrency(totalLifetimeBilled, useBengali)}
               </span>
             </div>
-            <div>
+            <div className="p-1 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40">
               <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">মোট পরিশোধ</span>
               <span className="text-xs sm:text-sm font-black text-emerald-700 dark:text-emerald-300 tabular-nums">
                 {toBnCurrency(totalLifetimePaid, useBengali)}
               </span>
             </div>
-            <div>
+            <div className="p-1 rounded-xl bg-rose-50/50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40">
               <span className="text-[10px] text-rose-600 dark:text-rose-400 font-bold block">বর্তমান দেনা</span>
               <span className="text-xs sm:text-sm font-black text-rose-700 dark:text-rose-300 tabular-nums">
                 {toBnCurrency(supplier.totalPayable, useBengali)}
@@ -748,15 +755,15 @@ export const SupplierDetailsModal: React.FC<SupplierDetailsModalProps> = ({
                       <div className="space-y-1 text-xs">
                         {chalan.redEggCount && chalan.redEggCount > 0 ? (
                           <div className="flex items-center justify-between font-bold bg-rose-50/70 dark:bg-rose-950/30 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800 text-rose-950 dark:text-rose-200">
-                            <span>🔴 লাল ডিম: {toBengaliNumber(chalan.redEggCount, useBengali)} পিস ({toBengaliNumber(chalan.redRatePerHundred || Math.round((chalan.redRatePerPiece || 0) * 100), useBengali)} ৳/১০০)</span>
-                            <span className="font-black tabular-nums">{toBnCurrency(chalan.redTotalAmount || 0, useBengali)}</span>
+                            <span className="truncate flex-1 min-w-0 pr-1">🔴 লাল ডিম: {toBengaliNumber(chalan.redEggCount, useBengali)} পিস ({toBengaliNumber(chalan.redRatePerHundred || Math.round((chalan.redRatePerPiece || 0) * 100), useBengali)} ৳/১০০)</span>
+                            <span className="font-black tabular-nums shrink-0 whitespace-nowrap text-right">{toBnCurrency(chalan.redTotalAmount || 0, useBengali)}</span>
                           </div>
                         ) : null}
 
                         {chalan.whiteEggCount && chalan.whiteEggCount > 0 ? (
                           <div className="flex items-center justify-between font-bold bg-cyan-50/70 dark:bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-200 dark:border-cyan-800 text-cyan-950 dark:text-cyan-200">
-                            <span>⚪ সাদা ডিম: {toBengaliNumber(chalan.whiteEggCount, useBengali)} পিস ({toBengaliNumber(chalan.whiteRatePerHundred || Math.round((chalan.whiteRatePerPiece || 0) * 100), useBengali)} ৳/১০০)</span>
-                            <span className="font-black tabular-nums">{toBnCurrency(chalan.whiteTotalAmount || 0, useBengali)}</span>
+                            <span className="truncate flex-1 min-w-0 pr-1">⚪ সাদা ডিম: {toBengaliNumber(chalan.whiteEggCount, useBengali)} পিস ({toBengaliNumber(chalan.whiteRatePerHundred || Math.round((chalan.whiteRatePerPiece || 0) * 100), useBengali)} ৳/১০০)</span>
+                            <span className="font-black tabular-nums shrink-0 whitespace-nowrap text-right">{toBnCurrency(chalan.whiteTotalAmount || 0, useBengali)}</span>
                           </div>
                         ) : null}
                       </div>

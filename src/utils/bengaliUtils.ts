@@ -1,22 +1,50 @@
 const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
 const enDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
+/**
+ * Formats a number using the South Asian / Bangladeshi numbering comma standard:
+ * e.g. 1,000 | 40,000 | 1,45,000 | 10,45,000
+ */
+export function formatSouthAsianNumber(val: number | string | undefined | null): string {
+  if (val === undefined || val === null || val === '') return '0';
+  const cleanStr = String(val).replace(/,/g, '');
+  const num = typeof val === 'number' ? val : parseFloat(cleanStr);
+  if (isNaN(num)) return String(val);
+
+  const isNegative = num < 0;
+  const absNum = Math.abs(num);
+
+  const isInt = Number.isInteger(absNum);
+  const parts = (isInt ? absNum.toString() : absNum.toFixed(2)).split('.');
+  const intPart = parts[0];
+  const decPart = parts[1] && parts[1] !== '00' ? `.${parts[1].replace(/0+$/, '')}` : '';
+
+  if (intPart.length <= 3) {
+    return (isNegative ? '-' : '') + intPart + decPart;
+  }
+
+  const lastThree = intPart.slice(-3);
+  let remaining = intPart.slice(0, -3);
+  const groups: string[] = [];
+  while (remaining.length > 2) {
+    groups.unshift(remaining.slice(-2));
+    remaining = remaining.slice(0, -2);
+  }
+  if (remaining.length > 0) {
+    groups.unshift(remaining);
+  }
+
+  return (isNegative ? '-' : '') + groups.join(',') + ',' + lastThree + decPart;
+}
+
 export function toBengaliNumber(num: number | string | undefined | null, useBengali = true): string {
   if (num === undefined || num === null) return useBengali ? '০' : '0';
   
-  // Format with thousand separator
-  let str: string;
-  if (typeof num === 'number') {
-    str = Number.isInteger(num) 
-      ? num.toLocaleString('en-US') 
-      : num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-  } else {
-    str = num.toString();
-  }
+  const formatted = formatSouthAsianNumber(num);
 
-  if (!useBengali) return str;
+  if (!useBengali) return formatted;
 
-  return str.replace(/\d/g, (d) => bnDigits[parseInt(d, 10)]);
+  return formatted.replace(/\d/g, (d) => bnDigits[parseInt(d, 10)]);
 }
 
 export function toBnCurrency(num: number | string | undefined | null, useBengali = true): string {
@@ -32,6 +60,88 @@ export function parseBengaliToNumber(str: string | number | undefined | null): n
   normalized = normalized.replace(/[^0-9.-]/g, '');
   const val = parseFloat(normalized);
   return isNaN(val) ? 0 : val;
+}
+
+/**
+ * Formats numbers dynamically as the user types them into inputs,
+ * inserting standard South Asian / Bangladeshi commas (e.g. ১,০০০ | ৪০,০০০ | ১,৪৫,০০০ | ১০,৪৫,০০০).
+ * Handles backspaces, decimals, and converts English digits (0-9) to Bengali digits (০-৯)
+ * based on the user's language setting.
+ */
+export function formatTypingNumber(
+  rawInput: string | number | undefined | null,
+  allowDecimal = false,
+  useBengali = true
+): string {
+  if (rawInput === undefined || rawInput === null) return '';
+  const str = String(rawInput);
+  if (!str.trim()) return '';
+
+  const isNegative = str.trim().startsWith('-');
+  let normalizedInt = '';
+  let decPart = '';
+  let hasDecimal = false;
+
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    const bnIdx = bnDigits.indexOf(char);
+    if (bnIdx !== -1) {
+      if (hasDecimal) {
+        decPart += enDigits[bnIdx];
+      } else {
+        normalizedInt += enDigits[bnIdx];
+      }
+    } else if (char >= '0' && char <= '9') {
+      if (hasDecimal) {
+        decPart += char;
+      } else {
+        normalizedInt += char;
+      }
+    } else if (allowDecimal && (char === '.' || char === '।') && !hasDecimal) {
+      hasDecimal = true;
+    }
+  }
+
+  // If no digits were entered and no decimal
+  if (!normalizedInt && !hasDecimal) {
+    return isNegative ? '-' : '';
+  }
+
+  // Handle leading zeros (e.g., "05" -> "5", but keep "0" if single digit or followed by decimal)
+  if (normalizedInt.length > 1 && normalizedInt.startsWith('0')) {
+    normalizedInt = normalizedInt.replace(/^0+/, '') || '0';
+  } else if (!normalizedInt && hasDecimal) {
+    normalizedInt = '0';
+  }
+
+  // Group integer part according to South Asian numbering (3 digits, then groups of 2)
+  let formattedInt = '';
+  if (normalizedInt.length <= 3) {
+    formattedInt = normalizedInt;
+  } else {
+    const lastThree = normalizedInt.slice(-3);
+    let remaining = normalizedInt.slice(0, -3);
+    const groups: string[] = [];
+    while (remaining.length > 2) {
+      groups.unshift(remaining.slice(-2));
+      remaining = remaining.slice(0, -2);
+    }
+    if (remaining.length > 0) {
+      groups.unshift(remaining);
+    }
+    formattedInt = groups.join(',') + ',' + lastThree;
+  }
+
+  let result = (isNegative ? '-' : '') + formattedInt;
+  if (hasDecimal) {
+    result += '.' + decPart;
+  }
+
+  if (useBengali) {
+    return result.replace(/\d/g, (d) => bnDigits[parseInt(d, 10)]);
+  }
+
+  return result;
 }
 
 /**

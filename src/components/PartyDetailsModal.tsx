@@ -4,6 +4,7 @@ import { toBengaliNumber, toBnCurrency, formatDisplayMemoNumber, compareMemosDes
 import { getPartyColorTheme } from '../utils/partyColors';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { downloadElementAsImage } from '../utils/shareUtils';
+import { hapticCancel, hapticDelete } from '../utils/haptics';
 import { 
   X, 
   Phone, 
@@ -221,7 +222,7 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
     >
       <div 
         id="party-details-card"
-        className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] border border-slate-200 dark:border-slate-800"
+        className="soft-elevated modal-enter w-full max-w-2xl lg:max-w-3xl rounded-3xl overflow-hidden flex flex-col max-h-[95vh] border border-slate-200/80 dark:border-white/10"
       >
         {/* Color accent strip */}
         <div className={`h-2 w-full bg-gradient-to-r ${theme.headerBar}`}></div>
@@ -253,7 +254,10 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
             {onDeleteParty && !party.id.startsWith('temp-') && (
               <button
                 type="button"
-                onClick={() => setShowDeleteConfirm(true)}
+                onClick={() => {
+                  hapticCancel();
+                  setShowDeleteConfirm(true);
+                }}
                 title="পার্টি ডিলিট করুন"
                 className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg transition"
               >
@@ -261,7 +265,10 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
               </button>
             )}
             <button
-              onClick={onClose}
+              onClick={() => {
+                hapticCancel();
+                onClose();
+              }}
               className="p-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition"
             >
               <X className="w-4 h-4" />
@@ -479,21 +486,21 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
             )}
           </div>
 
-          {/* 3. Compact Financials Summary Strip */}
-          <div className="grid grid-cols-3 gap-1.5 text-center p-1.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
-            <div>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block">মোট বিক্রয়</span>
+          {/* 3. Compact Financials Summary Strip - Modern Glassmorphism */}
+          <div className="grid grid-cols-3 gap-2 text-center p-2.5 glass-card rounded-2xl border shadow-xs">
+            <div className="p-1 rounded-xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40">
+              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold block">মোট বিক্রয়</span>
               <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tabular-nums">
                 {toBnCurrency(totalLifetimeBilled, useBengali)}
               </span>
             </div>
-            <div>
+            <div className="p-1 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40">
               <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">মোট জমা</span>
               <span className="text-xs sm:text-sm font-black text-emerald-700 dark:text-emerald-300 tabular-nums">
                 {toBnCurrency(totalLifetimePaid, useBengali)}
               </span>
             </div>
-            <div>
+            <div className="p-1 rounded-xl bg-rose-50/50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40">
               <span className="text-[10px] text-rose-600 dark:text-rose-400 font-bold block">বর্তমান বাকি</span>
               <span className="text-xs sm:text-sm font-black text-rose-700 dark:text-rose-300 tabular-nums">
                 {toBnCurrency(party.currentDue, useBengali)}
@@ -792,7 +799,7 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
                  Memos Card View (কার্ড তালিকা ভিউ)
                  ১ লাইনে ডিমের সংখ্যা, রেট ও টোটাল টাকা
                  ======================================================== */
-              <div className="space-y-3">
+              <div className="space-y-1.5">
                 {filteredMemos.map((memo, idx) => {
                   const isFullyPaid = memo.remainingDue <= 0;
                   const cardThemes = [
@@ -811,35 +818,35 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
                         onClose();
                         onViewMemoVoucher(memo);
                       }}
-                      className={`${currentTheme} rounded-2xl p-3.5 border-2 border-l-[6px] ${theme.borderLeft} shadow-md hover:shadow-lg transition-all cursor-pointer space-y-2.5 relative`}
+                      className={`${currentTheme} rounded-xl py-1.5 px-2 sm:py-2 sm:px-2.5 border-2 border-l-4 ${theme.borderLeft} shadow-2xs hover:shadow-md transition-all cursor-pointer space-y-1 relative`}
                     >
                       {/* Top Row: Memo No, Distinct Party Pill & Type */}
-                      <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                      <div className="flex items-center justify-between gap-1 flex-wrap">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`${theme.memoNumBadge} font-mono font-black text-xs px-2 py-0.5 rounded-lg shadow-2xs`}>
+                          <span className={`${theme.memoNumBadge} font-mono font-black text-[11px] px-1.5 py-0.2 rounded-md shadow-2xs`}>
                             {formatDisplayMemoNumber(memo.memoNumber, useBengali)}
                           </span>
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border ${theme.nameBadge} text-left shadow-2xs`}>
-                            <span className={`w-4 h-4 rounded-md bg-gradient-to-br ${theme.avatarGradient} text-white flex items-center justify-center text-[10px] font-black shrink-0`}>
+                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border ${theme.nameBadge} text-left shadow-2xs`}>
+                            <span className={`w-3.5 h-3.5 rounded-md bg-gradient-to-br ${theme.avatarGradient} text-white flex items-center justify-center text-[9.5px] font-black shrink-0`}>
                               {memo.partyName.trim().charAt(0)}
                             </span>
-                            <span className="font-black text-xs sm:text-sm leading-tight">
+                            <span className="font-bold text-xs leading-tight">
                               {memo.partyName}
                             </span>
                           </span>
-                          <span className={`text-[10px] px-1.5 py-0.2 rounded-md font-bold border ${typeBadgeStyle}`}>
+                          <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-bold border ${typeBadgeStyle}`}>
                             {memo.partyType}
                           </span>
                         </div>
 
-                        <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                        <span className="text-[10.5px] font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded-md">
                           <CalendarTodayIcon className="w-3 h-3 text-blue-600 dark:text-blue-400" />
                           {memo.formattedDate}
                         </span>
                       </div>
 
                       {/* Second Row: Egg items with rates and total */}
-                      <div className="space-y-0.5">
+                      <div className="space-y-0.5 my-0.5">
                         {memo.items.map((it, idx) => {
                           if (!it.count || it.count <= 0) return null;
                           const isRed = it.eggType === 'লাল ডিম';
@@ -850,7 +857,7 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
                           return (
                             <div
                               key={idx}
-                              className={`flex items-center justify-between text-[11px] font-bold px-2 py-0.5 rounded-md border ${
+                              className={`flex items-center justify-between text-[11px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded-md border ${
                                 isRed
                                   ? 'bg-rose-50/90 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-950 dark:text-rose-100'
                                   : isWhite
@@ -858,12 +865,12 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
                                   : 'bg-purple-50/90 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800 text-purple-950 dark:text-purple-100'
                               }`}
                             >
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <span>
+                              <div className="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+                                <span className="truncate">
                                   {toBengaliNumber(it.count, useBengali)} {it.eggType} {toBengaliNumber(rateHundred, useBengali)} টাকা করে
                                 </span>
                               </div>
-                              <span className="font-black text-slate-950 dark:text-white tabular-nums shrink-0 ml-2">
+                              <span className="font-black text-slate-950 dark:text-white tabular-nums shrink-0 ml-1.5 whitespace-nowrap text-right">
                                 = {toBnCurrency(itemTotal, useBengali)}
                               </span>
                             </div>
@@ -872,17 +879,17 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
                       </div>
 
                       {/* Third Row: Financials and Action Buttons (High Contrast & Clear) */}
-                      <div className="flex items-center justify-between pt-0.5 border-t border-slate-100 dark:border-slate-800">
-                        <div className="space-y-0.5">
-                          <div className="text-xs font-black text-slate-950 dark:text-white tabular-nums flex items-center gap-1.5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pt-0.5 border-t border-slate-100 dark:border-slate-800">
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="text-[11px] sm:text-xs font-black text-slate-950 dark:text-white tabular-nums flex items-center gap-1.5">
                             <span>মোট দাবি: {toBnCurrency(memo.totalDemand, useBengali)}</span>
                             {memo.previousDue > 0 && (
-                              <span className="text-[10.5px] font-bold text-purple-800 dark:text-purple-300">
+                              <span className="text-[10px] font-bold text-purple-800 dark:text-purple-300">
                                 (সাবেক: +{toBnCurrency(memo.previousDue, useBengali)})
                               </span>
                             )}
                           </div>
-                          <div className="text-[11px] flex items-center gap-1 flex-wrap font-bold">
+                          <div className="text-[10px] sm:text-[10.5px] flex items-center gap-1 flex-wrap font-bold">
                             <span className="bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-200 px-1.5 py-0.2 rounded border border-emerald-300 dark:border-emerald-700 tabular-nums">
                               নগদ: {toBnCurrency(memo.cashPaid, useBengali)}
                             </span>
@@ -897,16 +904,16 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
                         </div>
 
                         {/* Action Icons */}
-                        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-1 self-end sm:self-center shrink-0" onClick={(e) => e.stopPropagation()}>
                           <button
                             title="মেমো দেখুন"
                             onClick={() => {
                               onClose();
                               onViewMemoVoucher(memo);
                             }}
-                            className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/80 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 transition active:scale-95 shadow-2xs"
+                            className="p-1 sm:p-1.2 rounded-md bg-blue-50 dark:bg-blue-950/80 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 transition active:scale-95 shadow-2xs"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-3.5 h-3.5" />
                           </button>
                           <button
                             title="মেমো প্রিন্ট করুন"
@@ -914,25 +921,25 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
                               onClose();
                               onViewMemoVoucher(memo);
                             }}
-                            className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition active:scale-95 shadow-2xs"
+                            className="p-1 sm:p-1.2 rounded-md bg-indigo-50 dark:bg-indigo-950/80 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition active:scale-95 shadow-2xs"
                           >
-                            <Printer className="w-4 h-4" />
+                            <Printer className="w-3.5 h-3.5" />
                           </button>
                           <button
                             title="হোয়াটসঅ্যাপে শেয়ার"
                             onClick={(e) => handleShare(memo, e)}
-                            className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition active:scale-95 shadow-2xs"
+                            className="p-1 sm:p-1.2 rounded-md bg-emerald-50 dark:bg-emerald-950/80 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition active:scale-95 shadow-2xs"
                           >
-                            <Share2 className="w-4 h-4" />
+                            <Share2 className="w-3.5 h-3.5" />
                           </button>
                           {onDeleteMemo && (
                             <button
                               title="মেমো মুছুন"
                               type="button"
                               onClick={() => setMemoToDelete(memo)}
-                              className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/80 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition active:scale-95 shadow-2xs"
+                              className="p-1 sm:p-1.2 rounded-md bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/80 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition active:scale-95 shadow-2xs"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           )}
                         </div>
@@ -946,10 +953,10 @@ export const PartyDetailsModal: React.FC<PartyDetailsModalProps> = ({
         </div>
 
         {/* Modal Close Button Bar */}
-        <div className="px-3 py-2 bg-stone-100 dark:bg-stone-850 border-t border-stone-200 dark:border-stone-800 text-right">
+        <div className="px-3 py-1.5 bg-stone-100 dark:bg-stone-850 border-t border-stone-200 dark:border-stone-800 text-right">
           <button
             onClick={onClose}
-            className="w-full py-2 bg-stone-800 hover:bg-stone-900 text-white rounded-xl font-bold text-xs transition active:scale-95"
+            className="w-full py-1.5 bg-stone-800 hover:bg-stone-900 text-white rounded-lg font-bold text-xs transition active:scale-95"
           >
             বন্ধ করুন
           </button>

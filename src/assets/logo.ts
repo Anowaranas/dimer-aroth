@@ -1,5 +1,6 @@
-import luxuryEggLogo from './images/luxury_egg_app_logo_1790454939764.jpg';
+import appIcon from './images/app_icon_design_1791660345814.jpg';
 
-export const APP_LOGO_SRC = luxuryEggLogo;
-export default luxuryEggLogo;
+export const APP_LOGO_SRC = appIcon;
+export default appIcon;
+
 

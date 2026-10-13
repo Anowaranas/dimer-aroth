@@ -16,6 +16,9 @@ export default defineConfig(() => {
         includeAssets: ['favicon.ico', 'icon.svg', 'egg-logo.jpg'],
         manifest: false,
         workbox: {
+          skipWaiting: true,
+          clientsClaim: true,
+          cleanupOutdatedCaches: true,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff,woff2}'],
           runtimeCaching: [
             {

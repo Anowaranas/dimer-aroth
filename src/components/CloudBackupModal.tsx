@@ -147,11 +147,11 @@ export const CloudBackupModal: React.FC<CloudBackupModalProps> = ({
   return (
     <div 
       id="cloud-backup-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-stone-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-stone-950/75 backdrop-blur-md animate-in fade-in duration-200"
     >
       <div 
         id="cloud-backup-modal-card"
-        className="bg-white dark:bg-stone-800 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] border border-stone-200 dark:border-stone-700 animate-in zoom-in-95 duration-150"
+        className="material-card w-full max-w-md md:max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] border animate-in zoom-in-95 duration-150"
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-700 text-white px-5 py-4 flex items-center justify-between shadow-md">

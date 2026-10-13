@@ -3,10 +3,9 @@ import { Memo, Party, Supplier, SupplierChalan, SupplierPayment, BaseRate, ShopP
 import { PartiesView } from './PartiesView';
 import { SuppliersView } from './SuppliersView';
 import { toBengaliNumber } from '../utils/bengaliUtils';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
-import PeopleIcon from '@mui/icons-material/People';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded';
+import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
+import { hapticLight } from '../utils/haptics';
 
 export type KhataSubTab = 'parties' | 'suppliers';
 
@@ -76,38 +75,42 @@ export const UnifiedKhataView: React.FC<UnifiedKhataViewProps> = ({
   const totalSupplierDue = suppliers.reduce((sum, s) => sum + (s.totalPayable || 0), 0);
 
   return (
-    <div id="unified-khata-view-container" className="space-y-2">
-      {/* 1. Primary Switch Tabs - Clean, Crisp & High-Contrast */}
+    <div id="unified-khata-view-container" className="space-y-2.5">
+      {/* 1. Primary Switch Tabs - Glass-Card Segmented Control */}
       <div 
         id="unified-khata-switcher"
-        className="bg-slate-900 dark:bg-slate-800 rounded-xl p-1 shadow-xs border border-slate-700/60 text-white"
+        className="glass-card rounded-2xl p-1.5 shadow-md border"
       >
-        {/* 2 Primary Switch Tabs */}
-        <div className="grid grid-cols-2 gap-1 p-0.5 bg-black/25 rounded-lg border border-white/10">
+        <div className="grid grid-cols-2 gap-1.5 p-1 soft-inset rounded-xl">
           {/* Party Khata Tab Button */}
           <button
             type="button"
             id="tab-btn-parties-khata"
-            onClick={() => onSubTabChange('parties')}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-150 ${
+            onClick={() => {
+              hapticLight();
+              onSubTabChange('parties');
+            }}
+            className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl transition-all duration-200 active:scale-[0.98] tactile-tap ${
               currentSubTab === 'parties'
-                ? 'bg-blue-600 text-white font-black shadow-xs'
-                : 'text-slate-300 hover:bg-white/10 font-bold'
+                ? 'soft-btn-primary font-black'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 font-bold'
             }`}
           >
-            <PeopleIcon className="w-4 h-4" />
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${currentSubTab === 'parties' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-blue-600 dark:text-blue-400'}`}>
+              <PeopleAltRoundedIcon className="w-4 h-4" />
+            </div>
             <div className="text-left min-w-0">
-              <div className="text-xs leading-tight flex items-center gap-1">
+              <div className="text-xs leading-tight flex items-center gap-1.5">
                 <span>পার্টি খাতা</span>
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
                   currentSubTab === 'parties' 
                     ? 'bg-white/25 text-white' 
-                    : 'bg-white/15 text-slate-300'
+                    : 'bg-black/10 dark:bg-white/15 text-slate-700 dark:text-slate-300'
                 }`}>
                   {toBengaliNumber(parties.length, useBengali)}
                 </span>
               </div>
-              <div className={`text-[10.5px] leading-tight font-bold mt-0.5 truncate ${currentSubTab === 'parties' ? 'text-emerald-200' : 'text-slate-300'}`}>
+              <div className={`text-[10.5px] leading-tight font-bold mt-0.5 truncate tabular-nums ${currentSubTab === 'parties' ? 'text-blue-100' : 'text-slate-600 dark:text-slate-300'}`}>
                 পাওনা: ৳{toBengaliNumber(totalPartyDue, useBengali)}
               </div>
             </div>
@@ -117,26 +120,31 @@ export const UnifiedKhataView: React.FC<UnifiedKhataViewProps> = ({
           <button
             type="button"
             id="tab-btn-suppliers-khata"
-            onClick={() => onSubTabChange('suppliers')}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all duration-150 ${
+            onClick={() => {
+              hapticLight();
+              onSubTabChange('suppliers');
+            }}
+            className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl transition-all duration-200 active:scale-[0.98] tactile-tap ${
               currentSubTab === 'suppliers'
-                ? 'bg-indigo-600 text-white font-black shadow-xs'
-                : 'text-slate-300 hover:bg-white/10 font-bold'
+                ? 'soft-btn-purple font-black'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 font-bold'
             }`}
           >
-            <LocalShippingIcon className="w-4 h-4" />
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${currentSubTab === 'suppliers' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400'}`}>
+              <LocalShippingRoundedIcon className="w-4 h-4" />
+            </div>
             <div className="text-left min-w-0">
-              <div className="text-xs leading-tight flex items-center gap-1">
+              <div className="text-xs leading-tight flex items-center gap-1.5">
                 <span>মহাজন খাতা</span>
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
                   currentSubTab === 'suppliers' 
                     ? 'bg-white/25 text-white' 
-                    : 'bg-white/15 text-slate-300'
+                    : 'bg-black/10 dark:bg-white/15 text-slate-700 dark:text-slate-300'
                 }`}>
                   {toBengaliNumber(suppliers.length, useBengali)}
                 </span>
               </div>
-              <div className={`text-[10.5px] leading-tight font-bold mt-0.5 truncate ${currentSubTab === 'suppliers' ? 'text-rose-200' : 'text-slate-300'}`}>
+              <div className={`text-[10.5px] leading-tight font-bold mt-0.5 truncate tabular-nums ${currentSubTab === 'suppliers' ? 'text-rose-200' : 'text-slate-600 dark:text-slate-300'}`}>
                 দেনা: ৳{toBengaliNumber(totalSupplierDue, useBengali)}
               </div>
             </div>

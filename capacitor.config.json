@@ -1,0 +1,8 @@
+{
+  "appId": "com.dimeraroth.app",
+  "appName": "প্রতিদিন ডিমের আড়ৎ",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

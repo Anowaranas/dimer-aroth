@@ -175,19 +175,19 @@ export async function generateElementPngDataUrl(elementId: string): Promise<stri
     // Small delay to ensure any layout re-calculations are settled
     await new Promise((resolve) => setTimeout(resolve, 60));
 
-    // Determine target compact width matching app view size
-    const targetWidth = element.clientWidth && element.clientWidth > 300 ? Math.min(element.clientWidth, 460) : 440;
+    // Determine target compact width matching paper design size (520px)
+    const targetWidth = 520;
 
     // Method A: Primary Engine - html2canvas (Direct 2D Canvas with active browser font shaping)
     try {
       const canvas = await html2canvas(element, {
-        scale: 2.0, // Crisp high definition without oversized scaling
+        scale: 2.5, // High definition crisp rendering
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
         imageTimeout: 12000,
-        windowWidth: targetWidth + 100,
+        windowWidth: 720,
         onclone: (_clonedDoc, clonedElement) => {
           // Remove only Google Fonts stylesheets to prevent CORS cssRules error while keeping Tailwind CSS intact
           const externalLinks = document.querySelectorAll('link[rel="stylesheet"]');
@@ -209,17 +209,18 @@ export async function generateElementPngDataUrl(elementId: string): Promise<stri
             _clonedDoc.head.appendChild(newStyle);
           });
 
-          // Normalize container styles for crisp rendering matching app view dimensions
+          // Normalize container styles for crisp rendering matching 520px paper dimensions
           const widthStr = `${targetWidth}px`;
           clonedElement.style.width = widthStr;
           clonedElement.style.minWidth = widthStr;
           clonedElement.style.maxWidth = widthStr;
           clonedElement.style.letterSpacing = 'normal';
-          clonedElement.style.fontFamily = "'Hind Siliguri', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+          clonedElement.style.fontFamily = "'Hind Siliguri', 'Anek Bangla', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif";
           clonedElement.style.boxSizing = 'border-box';
           clonedElement.style.transform = 'none';
           clonedElement.style.margin = '0 auto';
           clonedElement.style.overflow = 'visible';
+          clonedElement.style.background = '#ffffff';
 
           // Ensure parents in the clone do not clip or constrain
           let parent = clonedElement.parentElement;
@@ -238,11 +239,9 @@ export async function generateElementPngDataUrl(elementId: string): Promise<stri
           allNodes.forEach((node) => {
             const el = node as HTMLElement;
             if (el.style) {
-              // Strictly zero letter-spacing to prevent Bengali vowel & ligature collisions
               el.style.letterSpacing = 'normal';
               el.classList.remove('tracking-tight', 'tracking-tighter', 'leading-none');
 
-              // Ensure at least 1.45 line-height so top & bottom matras never collide
               const computed = window.getComputedStyle(el);
               const lh = parseFloat(computed.lineHeight);
               const fs = parseFloat(computed.fontSize);
@@ -259,11 +258,18 @@ export async function generateElementPngDataUrl(elementId: string): Promise<stri
             el.style.flexWrap = 'nowrap';
           });
 
-          // Enforce nowrap on all table cells, headers, badges, and monetary amounts
-          const nowrapElements = clonedElement.querySelectorAll('th, td, .tabular-nums, .whitespace-nowrap, span.font-black, span.font-bold');
-          nowrapElements.forEach((node) => {
-            const el = node as HTMLElement;
-            el.style.wordBreak = 'keep-all';
+          // Enforce table border-collapse and solid borders
+          const tables = clonedElement.querySelectorAll('table');
+          tables.forEach((t) => {
+            const tableEl = t as HTMLElement;
+            tableEl.style.borderCollapse = 'collapse';
+            tableEl.style.width = '100%';
+          });
+
+          const tableCells = clonedElement.querySelectorAll('th, td');
+          tableCells.forEach((cell) => {
+            const cellEl = cell as HTMLElement;
+            cellEl.style.wordBreak = 'keep-all';
           });
         },
       });

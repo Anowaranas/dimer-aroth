@@ -1,0 +1,56 @@
+{
+  "id": "/",
+  "name": "প্রতিদিন ডিমের আড়ৎ হিসাব খাতা",
+  "short_name": "ডিমের আড়ৎ",
+  "description": "সহজ ও মোবাইল বান্ধব ডিমের আড়ৎ ও পাইকারি বিক্রির হিসাব খাতা, মেমো ও বাকি ব্যবস্থাপনা অ্যাপ।",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#ea580c",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/egg-logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/egg-logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "নতুন মেমো",
+      "short_name": "মেমো",
+      "description": "দ্রুত ডিম বিক্রির মেমো তৈরি করুন",
+      "url": "/?action=new-memo",
+      "icons": [{ "src": "/icon.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "বকেয়া খাতা",
+      "short_name": "খাতা",
+      "description": "পার্টি ও কাস্টমারের বাকি খাতা দেখুন",
+      "url": "/?tab=khata",
+      "icons": [{ "src": "/icon.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "মহাজন চালান",
+      "short_name": "চালান",
+      "description": "মহাজনের ডিম আমদানির হিসাব",
+      "url": "/?tab=suppliers",
+      "icons": [{ "src": "/icon.svg", "sizes": "96x96" }]
+    }
+  ]
+}

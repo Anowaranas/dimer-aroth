@@ -10,6 +10,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import ReceiptIcon from '@mui/icons-material/Receipt';
+import { hapticDelete, hapticCancel } from '../utils/haptics';
 
 export interface ConfirmDeleteModalProps {
   isOpen: boolean;
@@ -46,21 +47,31 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
     type === 'chalan' ? 'চালান মেমো মুছে ফেলতে চান?' :
     'মহাজন মুছে ফেলতে চান?';
 
+  const handleCancel = () => {
+    hapticCancel();
+    onCancel();
+  };
+
+  const handleConfirm = () => {
+    hapticDelete();
+    onConfirm();
+  };
+
   return (
     <div
       id="confirm-delete-backdrop"
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/70 backdrop-blur-xs animate-in fade-in duration-150"
-      onClick={onCancel}
+      onClick={handleCancel}
     >
       <div
         id="confirm-delete-modal-card"
-        className="bg-white dark:bg-stone-900 rounded-3xl p-4 sm:p-5 max-w-sm w-full shadow-2xl border border-rose-250 dark:border-rose-900/80 animate-in zoom-in-95 duration-150 space-y-3.5 relative"
+        className="soft-elevated modal-enter rounded-3xl p-4 sm:p-5 max-w-sm w-full border border-rose-200 dark:border-rose-900/80 space-y-3.5 relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Close Button */}
         <button
           type="button"
-          onClick={onCancel}
+          onClick={handleCancel}
           className="absolute top-3.5 right-3.5 p-1 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition"
           aria-label="বন্ধ করুন"
         >
@@ -358,18 +369,18 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
           <button
             id="confirm-delete-cancel-btn"
             type="button"
-            onClick={onCancel}
+            onClick={handleCancel}
             disabled={isDeleting}
-            className="flex-1 py-2.5 rounded-xl border border-stone-300 dark:border-stone-600 font-bold text-xs text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition active:scale-95 disabled:opacity-50"
+            className="flex-1 py-2.5 rounded-xl soft-btn font-bold text-xs text-stone-700 dark:text-stone-300 transition active:scale-95 disabled:opacity-50"
           >
             বাতিল
           </button>
           <button
             id="confirm-delete-submit-btn"
             type="button"
-            onClick={onConfirm}
+            onClick={handleConfirm}
             disabled={isDeleting}
-            className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black text-xs shadow-md shadow-rose-950/20 flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-50"
+            className="flex-1 py-2.5 rounded-xl soft-btn-danger text-white font-black text-xs flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-50"
           >
             <DeleteIcon className="w-3.5 h-3.5" />
             <span>{isDeleting ? 'মোছা হচ্ছে...' : 'হ্যাঁ, মুছে ফেলুন'}</span>

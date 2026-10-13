@@ -96,11 +96,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   return (
     <div
       id="share-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-stone-950/75 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-stone-950/75 backdrop-blur-md animate-in fade-in duration-150"
     >
       <div
         id="share-modal-card"
-        className="bg-white dark:bg-stone-900 w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 border border-stone-200 dark:border-stone-800"
+        className="material-card modal-enter w-full max-w-sm md:max-w-md rounded-3xl shadow-2xl overflow-hidden border"
       >
         {/* Header - Sleek & Modern */}
         <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-sky-700 text-white px-5 py-3.5 flex items-center justify-between shadow-xs">
@@ -158,7 +158,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             id="btn-android-share"
             onClick={handleAndroidShare}
             disabled={isSharingImage}
-            className="w-full p-3.5 rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-600 to-sky-600 hover:from-blue-800 hover:to-indigo-700 text-white flex items-center justify-between shadow-md shadow-blue-900/20 transition active:scale-[0.98] border border-blue-400/40 relative overflow-hidden disabled:opacity-50"
+            className="w-full p-3.5 rounded-2xl soft-btn-primary flex items-center justify-between transition active:scale-[0.98] relative overflow-hidden disabled:opacity-50"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-white shrink-0">
@@ -184,7 +184,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           <button
             id="btn-print-memo"
             onClick={handlePrint}
-            className="w-full p-3 rounded-2xl bg-stone-900 hover:bg-stone-950 text-white flex items-center justify-between shadow-md transition active:scale-[0.98] border border-stone-700"
+            className="w-full p-3 rounded-2xl soft-btn bg-stone-900 text-white flex items-center justify-between transition active:scale-[0.98] border border-stone-700"
           >
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-white shrink-0">
@@ -206,7 +206,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               id="btn-send-due-reminder"
               type="button"
               onClick={handleSendReminder}
-              className="w-full p-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white flex items-center justify-between shadow-md hover:from-amber-600 hover:to-rose-600 transition active:scale-98 border border-amber-400/30"
+              className="w-full p-2.5 rounded-xl soft-btn-amber text-white flex items-center justify-between transition active:scale-98"
             >
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-white/20 backdrop-blur-xs text-white flex items-center justify-center shrink-0">

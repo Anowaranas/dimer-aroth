@@ -5,13 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "APP_MODE=dev tsx server.ts",
-    "build": "vite build && esbuild server.ts --platform=node --format=esm --packages=external --outfile=server.js",
-    "start": "node --import tsx server.ts",
+    "build": "vite build && esbuild server.ts --platform=node --format=esm --target=node22 --outfile=server.js",
+    "gcp-build": "npm run build",
+    "start": "node server.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@capacitor/android": "8.5.2",
+    "@capacitor/cli": "8.5.2",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/haptics": "^8.0.2",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^9.4.0",
@@ -20,6 +25,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "compression": "^1.8.2",
     "dotenv": "^17.2.3",
+    "esbuild": "^0.28.0",
     "express": "^4.21.2",
     "firebase": "^12.19.0",
     "html-to-image": "^1.11.13",
@@ -32,8 +38,7 @@
     "tsx": "^4.21.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
-    "vite-plugin-pwa": "^1.3.0",
-    "esbuild": "^0.28.0"
+    "vite-plugin-pwa": "^1.3.0"
   },
   "devDependencies": {
     "@types/compression": "^1.8.1",
@@ -45,6 +50,7 @@
     "autoprefixer": "^10.4.21"
   },
   "engines": {
-    "node": ">=22.0.0"
-  }
+    "node": "22.x"
+  },
+  "packageManager": "npm@10.8.2"
 }

@@ -1,9 +1,10 @@
 import React from 'react';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import DescriptionIcon from '@mui/icons-material/Description';
-import SettingsIcon from '@mui/icons-material/Settings';
-import AddIcon from '@mui/icons-material/Add';
+import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
+import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
+import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
+import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import { hapticLight, hapticMedium } from '../utils/haptics';
 
 export type TabType = 'dashboard' | 'khata' | 'parties' | 'suppliers' | 'memos' | 'settings';
 
@@ -23,84 +24,88 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   // Normalize active tab so 'parties' or 'suppliers' highlights 'khata'
   const currentTab = (activeTab === 'parties' || activeTab === 'suppliers') ? 'khata' : activeTab;
 
+  const handleTabClick = (tab: TabType) => {
+    hapticLight();
+    setActiveTab(tab);
+  };
+
+  const handleNewSaleClick = () => {
+    hapticMedium();
+    onOpenNewSale();
+  };
+
   return (
     <nav 
       id="bottom-navigation-bar"
-      className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 shadow-xl"
+      className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#0c1222]/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-white/10 shadow-[0_-4px_24px_-4px_rgba(15,23,42,0.06)] dark:shadow-[0_-4px_28px_rgba(0,0,0,0.5)] safe-area-pb"
     >
-      <div className="max-w-xl md:max-w-2xl mx-auto grid grid-cols-5 h-16 px-2 items-center">
-        {/* 1. ড্যাশবোর্ড - Royal Blue Theme */}
+      <div className="w-full max-w-xl sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto grid grid-cols-5 h-16 px-1.5 sm:px-4 md:px-10 items-center">
+        {/* 1. ড্যাশবোর্ড */}
         <button
           type="button"
           id="nav-tab-dashboard"
-          onClick={() => setActiveTab('dashboard')}
-          className={`flex flex-col items-center justify-center relative transition-all duration-200 py-1 ${
+          onClick={() => handleTabClick('dashboard')}
+          className={`flex flex-col items-center justify-center relative transition-all duration-150 py-0.5 active:scale-95 group tactile-tap ${
             currentTab === 'dashboard'
-              ? 'text-blue-600 dark:text-blue-400 font-black'
+              ? 'text-blue-600 dark:text-blue-400 font-bold'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
           <div 
-            className={`relative px-3 py-1 rounded-xl transition-all duration-200 ${
+            className={`relative px-2.5 py-1 rounded-xl transition-all duration-150 flex items-center justify-center ${
               currentTab === 'dashboard'
-                ? 'bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 ring-1 ring-blue-500/30 shadow-2xs'
-                : ''
+                ? 'soft-inset bg-blue-500/15 dark:bg-blue-400/20 text-blue-600 dark:text-blue-400 border border-blue-500/25 shadow-xs'
+                : 'group-hover:bg-slate-100 dark:group-hover:bg-slate-800/60'
             }`}
           >
-            <DashboardIcon className={`w-5 h-5 transition-transform ${currentTab === 'dashboard' ? 'scale-105 text-blue-600 dark:text-blue-400' : ''}`} />
+            <DashboardRoundedIcon className={`w-5 h-5 transition-transform duration-150 ${currentTab === 'dashboard' ? 'scale-105 text-blue-600 dark:text-blue-400' : 'group-hover:scale-105'}`} />
           </div>
-          <span className={`text-[11px] mt-0.5 leading-tight tracking-tight whitespace-nowrap ${currentTab === 'dashboard' ? 'font-black text-blue-950 dark:text-blue-200' : 'font-semibold'}`}>
+          <span className={`text-[10.5px] mt-0.5 leading-tight tracking-tight whitespace-nowrap ${currentTab === 'dashboard' ? 'font-black text-blue-900 dark:text-blue-200' : 'font-semibold'}`}>
             ড্যাশবোর্ড
           </span>
-          {currentTab === 'dashboard' && (
-            <span className="absolute bottom-0 w-8 h-0.5 bg-blue-600 rounded-full" />
-          )}
         </button>
 
         {/* 2. খাতা (পার্টি ও মহাজন খাতা একত্র) - Indigo Theme */}
         <button
           type="button"
           id="nav-tab-khata"
-          onClick={() => setActiveTab('khata')}
-          className={`flex flex-col items-center justify-center relative transition-all duration-200 py-1 ${
+          onClick={() => handleTabClick('khata')}
+          className={`flex flex-col items-center justify-center relative transition-all duration-150 py-0.5 active:scale-95 group tactile-tap ${
             currentTab === 'khata'
-              ? 'text-indigo-600 dark:text-indigo-400 font-black'
+              ? 'text-indigo-600 dark:text-indigo-400 font-bold'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
           <div 
-            className={`relative px-3 py-1 rounded-xl transition-all duration-200 ${
+            className={`relative px-2.5 py-1 rounded-xl transition-all duration-150 flex items-center justify-center ${
               currentTab === 'khata'
-                ? 'bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-500/30 shadow-2xs'
-                : ''
+                ? 'soft-inset bg-indigo-500/15 dark:bg-indigo-400/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25 shadow-xs'
+                : 'group-hover:bg-slate-100 dark:group-hover:bg-slate-800/60'
             }`}
           >
-            <MenuBookIcon className={`w-5 h-5 transition-transform ${currentTab === 'khata' ? 'scale-105 text-indigo-600 dark:text-indigo-400' : ''}`} />
+            <MenuBookRoundedIcon className={`w-5 h-5 transition-transform duration-150 ${currentTab === 'khata' ? 'scale-105 text-indigo-600 dark:text-indigo-400' : 'group-hover:scale-105'}`} />
             {hasDueNotification && (
-              <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-rose-600 ring-2 ring-white dark:ring-slate-900 animate-pulse shadow-xs" />
+              <span className="absolute top-0 right-0.5 w-2 h-2 rounded-full bg-rose-600 ring-2 ring-white dark:ring-slate-900 animate-pulse shadow-xs" />
             )}
           </div>
-          <span className={`text-[11px] mt-0.5 leading-tight tracking-tight whitespace-nowrap ${currentTab === 'khata' ? 'font-black text-indigo-950 dark:text-indigo-200' : 'font-semibold'}`}>
+          <span className={`text-[10.5px] mt-0.5 leading-tight tracking-tight whitespace-nowrap ${currentTab === 'khata' ? 'font-black text-indigo-950 dark:text-indigo-200' : 'font-semibold'}`}>
             খাতা
           </span>
-          {currentTab === 'khata' && (
-            <span className="absolute bottom-0 w-8 h-0.5 bg-indigo-600 rounded-full" />
-          )}
         </button>
 
-        {/* 3. center button: ➕ নতুন বিক্রি (Refined Vibrant Primary Action Button) */}
-        <div className="flex flex-col items-center justify-center -mt-5 relative z-10">
+        {/* 3. center button: ➕ নতুন বিক্রি (Refined Soft UI FAB) */}
+        <div className="flex flex-col items-center justify-center -mt-3.5 relative z-10">
           <button
             type="button"
             id="nav-btn-center-new-sale"
-            onClick={onOpenNewSale}
-            className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 ring-4 ring-white dark:ring-slate-900 active:scale-90 hover:scale-105 transition-all duration-150 group"
+            onClick={handleNewSaleClick}
+            className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 text-white flex items-center justify-center soft-fab soft-btn-primary ring-4 ring-white dark:ring-[#0c1222] active:scale-95 transition-all duration-200 group tactile-tap"
             title="নতুন বিক্রি মেমো তৈরি করুন"
             aria-label="নতুন বিক্রি মেমো"
           >
-            <AddIcon className="w-7 h-7 text-white transition-transform group-hover:rotate-90 duration-200 drop-shadow-xs" />
+            <AddRoundedIcon className="w-6 h-6 text-white transition-transform group-hover:rotate-90 duration-200 drop-shadow-xs" />
           </button>
-          <span className="text-[10.5px] font-black text-slate-800 dark:text-slate-200 mt-1 leading-none tracking-tight">
+          <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 mt-1 leading-none tracking-tight">
             নতুন বিক্রি
           </span>
         </div>
@@ -109,56 +114,50 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         <button
           type="button"
           id="nav-tab-memos"
-          onClick={() => setActiveTab('memos')}
-          className={`flex flex-col items-center justify-center relative transition-all duration-200 py-1 ${
+          onClick={() => handleTabClick('memos')}
+          className={`flex flex-col items-center justify-center relative transition-all duration-150 py-0.5 active:scale-95 group tactile-tap ${
             currentTab === 'memos'
-              ? 'text-emerald-600 dark:text-emerald-400 font-black'
+              ? 'text-emerald-600 dark:text-emerald-400 font-bold'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
           <div 
-            className={`relative px-3 py-1 rounded-xl transition-all duration-200 ${
+            className={`relative px-2.5 py-1 rounded-xl transition-all duration-150 flex items-center justify-center ${
               currentTab === 'memos'
-                ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/30 shadow-2xs'
-                : ''
+                ? 'soft-inset bg-emerald-500/15 dark:bg-emerald-400/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shadow-xs'
+                : 'group-hover:bg-slate-100 dark:group-hover:bg-slate-800/60'
             }`}
           >
-            <DescriptionIcon className={`w-5 h-5 transition-transform ${currentTab === 'memos' ? 'scale-105 text-emerald-600 dark:text-emerald-400' : ''}`} />
+            <ReceiptLongRoundedIcon className={`w-5 h-5 transition-transform duration-150 ${currentTab === 'memos' ? 'scale-105 text-emerald-600 dark:text-emerald-400' : 'group-hover:scale-105'}`} />
           </div>
-          <span className={`text-[11px] mt-0.5 leading-tight tracking-tight whitespace-nowrap ${currentTab === 'memos' ? 'font-black text-emerald-950 dark:text-emerald-200' : 'font-semibold'}`}>
+          <span className={`text-[10.5px] mt-0.5 leading-tight tracking-tight whitespace-nowrap ${currentTab === 'memos' ? 'font-black text-emerald-950 dark:text-emerald-200' : 'font-semibold'}`}>
             মেমো
           </span>
-          {currentTab === 'memos' && (
-            <span className="absolute bottom-0 w-8 h-0.5 bg-emerald-600 rounded-full" />
-          )}
         </button>
 
-        {/* 5. সেটিংস - Slate Theme */}
+        {/* 5. সেটিংস - Slate/Amber Theme */}
         <button
           type="button"
           id="nav-tab-settings"
-          onClick={() => setActiveTab('settings')}
-          className={`flex flex-col items-center justify-center relative transition-all duration-200 py-1 ${
+          onClick={() => handleTabClick('settings')}
+          className={`flex flex-col items-center justify-center relative transition-all duration-150 py-0.5 active:scale-95 group tactile-tap ${
             currentTab === 'settings'
-              ? 'text-slate-900 dark:text-slate-100 font-black'
+              ? 'text-amber-600 dark:text-amber-400 font-bold'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
           <div 
-            className={`relative px-3 py-1 rounded-xl transition-all duration-200 ${
+            className={`relative px-2.5 py-1 rounded-xl transition-all duration-150 flex items-center justify-center ${
               currentTab === 'settings'
-                ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 ring-1 ring-slate-500/30 shadow-2xs'
-                : ''
+                ? 'soft-inset bg-amber-500/15 dark:bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-500/25 shadow-xs'
+                : 'group-hover:bg-slate-100 dark:group-hover:bg-slate-800/60'
             }`}
           >
-            <SettingsIcon className={`w-5 h-5 transition-transform ${currentTab === 'settings' ? 'scale-105 text-slate-900 dark:text-slate-100' : ''}`} />
+            <SettingsRoundedIcon className={`w-5 h-5 transition-transform duration-150 ${currentTab === 'settings' ? 'scale-105 text-amber-600 dark:text-amber-400' : 'group-hover:scale-105'}`} />
           </div>
-          <span className={`text-[11px] mt-0.5 leading-tight tracking-tight whitespace-nowrap ${currentTab === 'settings' ? 'font-black text-slate-950 dark:text-slate-100' : 'font-semibold'}`}>
+          <span className={`text-[10.5px] mt-0.5 leading-tight tracking-tight whitespace-nowrap ${currentTab === 'settings' ? 'font-black text-amber-950 dark:text-amber-200' : 'font-semibold'}`}>
             সেটিংস
           </span>
-          {currentTab === 'settings' && (
-            <span className="absolute bottom-0 w-8 h-0.5 bg-slate-700 dark:bg-slate-300 rounded-full" />
-          )}
         </button>
       </div>
     </nav>

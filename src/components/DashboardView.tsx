@@ -13,38 +13,32 @@ import {
   compareMemosDesc,
   compareChalansDesc
 } from '../utils/bengaliUtils';
-import AddIcon from '@mui/icons-material/Add';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import PrintIcon from '@mui/icons-material/Print';
-import ShareIcon from '@mui/icons-material/Share';
-import CallMadeIcon from '@mui/icons-material/CallMade';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import PhoneIcon from '@mui/icons-material/Phone';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import ReceiptIcon from '@mui/icons-material/Receipt';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import DeleteIcon from '@mui/icons-material/Delete';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
+import PrintRoundedIcon from '@mui/icons-material/PrintRounded';
+import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import CallRoundedIcon from '@mui/icons-material/CallRounded';
+import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
+import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
+import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
+import Inventory2RoundedIcon from '@mui/icons-material/Inventory2Rounded';
+import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded';
+import PointOfSaleRoundedIcon from '@mui/icons-material/PointOfSaleRounded';
+import ArrowOutwardRoundedIcon from '@mui/icons-material/ArrowOutwardRounded';
+import FilterAltRoundedIcon from '@mui/icons-material/FilterAltRounded';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { getPartyColorTheme } from '../utils/partyColors';
+import LightbulbRoundedIcon from '@mui/icons-material/LightbulbRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import { hapticCancel, hapticDelete, hapticLight, hapticMedium } from '../utils/haptics';
 import eggWarehouseBanner from '../assets/images/egg_warehouse_banner_1790454797592.jpg';
-import { 
-  ArrowUpRight, 
-  CheckCircle, 
-  Phone, 
-  Eye, 
-  Printer, 
-  Share2, 
-  Trash2, 
-  Filter, 
-  Clock, 
-  Receipt, 
-  ChevronLeft, 
-  ChevronRight 
-} from 'lucide-react';
+import { StatsCard } from './StatsCard';
+import { ShoppingBag, Users as LucideUsers, DollarSign, Receipt as LucideReceipt, Wallet, Truck } from 'lucide-react';
+import { AnimatedSearchBox } from './AnimatedSearchBox';
 
 interface DashboardViewProps {
   shopProfile: ShopProfile;
@@ -69,6 +63,7 @@ interface DashboardViewProps {
   onDeleteChalan?: (chalanId: string) => void;
   onOpenPartyDetails?: (party: Party) => void;
   onOpenSupplierDetails?: (supplier: Supplier) => void;
+  onOpenGuide?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -94,10 +89,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onDeleteChalan,
   onOpenPartyDetails,
   onOpenSupplierDetails,
+  onOpenGuide,
 }) => {
   const [dashboardListTab, setDashboardListTab] = useState<'memos' | 'chalans'>('memos');
   const [memoToDelete, setMemoToDelete] = useState<Memo | null>(null);
   const [chalanToDelete, setChalanToDelete] = useState<SupplierChalan | null>(null);
+  const [showTipsBanner, setShowTipsBanner] = useState<boolean>(() => {
+    return typeof window !== 'undefined' && localStorage.getItem('egg_arat_dismiss_quick_tips') !== 'true';
+  });
   const todayStr = getTodayDateInputValue();
   const yesterdayStr = getYesterdayDateInputValue();
 
@@ -146,6 +145,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       })
       .sort(compareChalansDesc);
   }, [chalans, dateFilter, activeDateString]);
+
+  const [dashSearch, setDashSearch] = useState('');
+
+  const searchedMemos = React.useMemo(() => {
+    if (!dashSearch.trim()) return filteredMemos;
+    const q = dashSearch.trim().toLowerCase();
+    return filteredMemos.filter((m) => 
+      m.partyName.toLowerCase().includes(q) ||
+      (m.memoNumber && m.memoNumber.toString().includes(q)) ||
+      (m.partyPhone && m.partyPhone.includes(q))
+    );
+  }, [filteredMemos, dashSearch]);
+
+  const searchedChalans = React.useMemo(() => {
+    if (!dashSearch.trim()) return filteredChalans;
+    const q = dashSearch.trim().toLowerCase();
+    return filteredChalans.filter((c) => 
+      c.supplierName.toLowerCase().includes(q) ||
+      (c.chalanNumber && c.chalanNumber.toString().includes(q)) ||
+      (c.supplierPhone && c.supplierPhone.includes(q))
+    );
+  }, [filteredChalans, dashSearch]);
 
   // Suppliers metrics - Memoized
   const totalSupplierPayable = React.useMemo(() => {
@@ -222,59 +243,62 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   return (
-    <div id="dashboard-container" className="space-y-2 pb-14">
-      {/* ১. সবার উপরে তারিখ এর বক্স - সম্পূর্ণ স্বচ্ছ ও ট্রান্সপারেন্ট (ডিমের আড়তের ছবির উপরে তারিখ) */}
+    <div id="dashboard-container" className="space-y-3 pb-16">
+      {/* ১. সবার উপরে তারিখ এর বক্স - Material Elevated Hero Container with Egg Warehouse Banner */}
       <div 
         id="dashboard-date-card"
-        className="relative overflow-hidden text-white rounded-xl p-2.5 sm:p-3 shadow-md border border-white/20 transition-all mt-0"
+        className="relative overflow-hidden text-white rounded-2xl p-3 sm:p-3.5 shadow-md border border-white/20 transition-all mt-0"
       >
-        {/* Background Banner Image of Egg Warehouse - Completely Clear, Natural & Crisp */}
+        {/* Background Banner Image of Egg Warehouse */}
         <div className="absolute inset-0 z-0 select-none overflow-hidden">
           <img 
             src={eggWarehouseBanner} 
             alt="ডিমের আড়ৎ ব্যানার" 
-            className="w-full h-full object-cover brightness-100 contrast-[1.05] saturate-110 object-center transition-all duration-300" 
+            className="w-full h-full object-cover brightness-95 contrast-[1.05] saturate-110 object-center transition-all duration-300" 
             onError={(e) => {
               e.currentTarget.src = '/egg_warehouse_banner.jpg';
             }}
           />
-          {/* Transparent minimal gradient only so the egg warehouse photo remains fully clear and transparent while text stays sharp */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
+          {/* Measured scrim to ensure high-contrast legibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/60 to-slate-950/40" />
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 relative z-10">
-          {/* Left: Transparent Date Display directly on the egg warehouse image */}
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="relative w-8 h-8 shrink-0 bg-amber-400 text-slate-950 rounded-lg flex items-center justify-center border border-amber-200/80 shadow-xs">
-              <CalendarTodayIcon style={{ fontSize: '18px' }} className="text-slate-950" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 relative z-10">
+          {/* Left: Material Date Display directly on the egg warehouse image */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="relative w-9 h-9 shrink-0 bg-amber-400 text-slate-950 rounded-xl flex items-center justify-center border border-amber-300/80 shadow-sm shadow-amber-400/20">
+              <CalendarTodayRoundedIcon className="w-5 h-5 text-slate-950" />
             </div>
             <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-xs sm:text-sm font-black text-white tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs sm:text-sm font-black text-white tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                   {dateFilter === 'today' ? todayDateFormatted : selectedDateLabel}
                 </span>
-                <span className="bg-amber-400 text-slate-950 text-[9.5px] font-black px-2 py-0.2 rounded-full shadow-xs shrink-0">
-                  {dateFilter === 'today' ? 'আজকের দিন' : 'ফিল্টার'}
+                <span className="bg-amber-400/90 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs shrink-0 tracking-tight">
+                  {dateFilter === 'today' ? 'আজকের দিন' : 'তারিখ ফিল্টার'}
                 </span>
               </div>
-              <span className="text-[11px] text-white/90 font-bold drop-shadow-[0_1px_3px_rgba(0,0,0,1)] flex items-center gap-1.5 mt-0.2">
-                <span>ডিমের আড়ৎ হিসাব</span>
-                <span>•</span>
-                <span className="text-white font-mono font-black">{activeDateString || todayStr}</span>
-              </span>
+              <div className="text-[11px] text-white/90 font-bold drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] flex items-center gap-1.5 mt-0.5">
+                <span className="truncate max-w-[140px] sm:max-w-[200px]">{shopProfile.name || 'ডিমের আড়ৎ হিসাব'}</span>
+                <span className="opacity-60">•</span>
+                <span className="text-amber-200 font-mono font-black shrink-0">{activeDateString || todayStr}</span>
+              </div>
             </div>
           </div>
 
-          {/* Right: Transparent Filter Buttons Styled Exactly Like the Top Part */}
-          <div className="flex items-center gap-1.5 self-start sm:self-auto overflow-x-auto max-w-full scrollbar-none pt-1 sm:pt-0">
+          {/* Right: Material Segmented Filter Chips */}
+          <div className="flex items-center gap-1 self-start sm:self-auto overflow-x-auto max-w-full scrollbar-none pt-1 sm:pt-0 bg-black/40 p-1 rounded-full border border-white/20 backdrop-blur-md">
             <button
               id="filter-today"
               type="button"
-              onClick={() => setDateFilter('today')}
-              className={`px-3 py-1 rounded-full transition-all text-xs font-black whitespace-nowrap active:scale-95 ${
+              onClick={() => {
+                hapticLight();
+                setDateFilter('today');
+              }}
+              className={`px-3 py-1 rounded-full transition-all text-xs font-black whitespace-nowrap active:scale-95 tactile-tap ${
                 dateFilter === 'today'
-                  ? 'bg-amber-400 text-slate-950 shadow-md border border-amber-200'
-                  : 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] bg-black/25 hover:bg-black/40 border border-white/20'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-300 text-slate-950 shadow-md border border-amber-200 font-black'
+                  : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
               আজকের হিসাব
@@ -282,11 +306,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <button
               id="filter-yesterday"
               type="button"
-              onClick={() => setDateFilter('yesterday')}
-              className={`px-3 py-1 rounded-full transition-all text-xs font-black whitespace-nowrap active:scale-95 ${
+              onClick={() => {
+                hapticLight();
+                setDateFilter('yesterday');
+              }}
+              className={`px-3 py-1 rounded-full transition-all text-xs font-black whitespace-nowrap active:scale-95 tactile-tap ${
                 dateFilter === 'yesterday'
-                  ? 'bg-amber-400 text-slate-950 shadow-md border border-amber-200'
-                  : 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] bg-black/25 hover:bg-black/40 border border-white/20'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-300 text-slate-950 shadow-md border border-amber-200 font-black'
+                  : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
               গতকালের
@@ -294,24 +321,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <button
               id="filter-custom"
               type="button"
-              onClick={() => setDateFilter('custom')}
-              className={`px-3 py-1 rounded-full transition-all text-xs font-black flex items-center gap-1 whitespace-nowrap active:scale-95 ${
+              onClick={() => {
+                hapticLight();
+                setDateFilter('custom');
+              }}
+              className={`px-3 py-1 rounded-full transition-all text-xs font-black flex items-center gap-1 whitespace-nowrap active:scale-95 tactile-tap ${
                 dateFilter === 'custom'
-                  ? 'bg-amber-400 text-slate-950 shadow-md border border-amber-200'
-                  : 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] bg-black/25 hover:bg-black/40 border border-white/20'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-300 text-slate-950 shadow-md border border-amber-200 font-black'
+                  : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
-              <CalendarTodayIcon className="w-3.5 h-3.5" />
+              <FilterAltRoundedIcon className="w-3.5 h-3.5" />
               <span>পূর্বের তারিখ</span>
             </button>
             <button
               id="filter-all"
               type="button"
-              onClick={() => setDateFilter('all')}
-              className={`px-3 py-1 rounded-full transition-all text-xs font-black whitespace-nowrap active:scale-95 ${
+              onClick={() => {
+                hapticLight();
+                setDateFilter('all');
+              }}
+              className={`px-3 py-1 rounded-full transition-all text-xs font-black whitespace-nowrap active:scale-95 tactile-tap ${
                 dateFilter === 'all'
-                  ? 'bg-amber-400 text-slate-950 shadow-md border border-amber-200'
-                  : 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] bg-black/25 hover:bg-black/40 border border-white/20'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-300 text-slate-950 shadow-md border border-amber-200 font-black'
+                  : 'text-white/90 hover:text-white hover:bg-white/10'
               }`}
             >
               সকল মেমো
@@ -319,12 +352,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Interactive Custom Date Picker Section (When 'পূর্বের তারিখ' is selected) - Fully Transparent and Seamless */}
+        {/* Interactive Custom Date Picker Section (When 'পূর্বের তারিখ' is selected) */}
         {dateFilter === 'custom' && (
-          <div className="mt-2.5 pt-2 border-t border-white/15 space-y-2 animate-in fade-in duration-150 relative z-10 text-xs">
+          <div className="mt-3 pt-2.5 border-t border-white/20 space-y-2 animate-in fade-in duration-150 relative z-10 text-xs">
             <div className="flex items-center justify-between text-white flex-wrap gap-1">
               <span className="font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] flex items-center gap-1.5 text-xs sm:text-sm">
-                <CalendarTodayIcon className="w-4 h-4 text-amber-400" />
+                <CalendarTodayRoundedIcon className="w-4 h-4 text-amber-400" />
                 <span>পূর্বের তারিখ নির্বাচন করুন:</span>
               </span>
               <span className="font-black text-slate-950 bg-amber-400 px-3 py-0.5 rounded-full text-xs shadow-md border border-amber-200">
@@ -337,28 +370,40 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 type="date"
                 value={customDate}
                 max={todayStr}
-                onChange={(e) => setCustomDate(e.target.value)}
-                className="flex-1 text-xs sm:text-sm font-black py-1.5 px-3 bg-black/40 border-2 border-amber-400 rounded-xl text-white [color-scheme:dark] shadow-md focus:outline-none focus:ring-2 focus:ring-amber-300"
+                onChange={(e) => {
+                  hapticLight();
+                  setCustomDate(e.target.value);
+                }}
+                className="flex-1 text-xs sm:text-sm font-black py-1.5 px-3 bg-black/60 border-2 border-amber-400 rounded-xl text-white [color-scheme:dark] shadow-md focus:outline-none focus:ring-2 focus:ring-amber-300"
               />
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => jumpDaysAgo(2)}
-                  className="text-xs font-black px-3 py-1 bg-black/25 hover:bg-black/40 text-white border border-white/25 rounded-full shadow-xs transition active:scale-95 whitespace-nowrap drop-shadow-[0_1px_3px_rgba(0,0,0,1)]"
+                  onClick={() => {
+                    hapticLight();
+                    jumpDaysAgo(2);
+                  }}
+                  className="text-[11px] font-bold px-2 py-0.5 bg-black/50 hover:bg-black/70 text-white border border-white/30 rounded-lg shadow-2xs transition active:scale-95 whitespace-nowrap tactile-tap"
                 >
                   -২ দিন
                 </button>
                 <button
                   type="button"
-                  onClick={() => jumpDaysAgo(3)}
-                  className="text-xs font-black px-3 py-1 bg-black/25 hover:bg-black/40 text-white border border-white/25 rounded-full shadow-xs transition active:scale-95 whitespace-nowrap drop-shadow-[0_1px_3px_rgba(0,0,0,1)]"
+                  onClick={() => {
+                    hapticLight();
+                    jumpDaysAgo(3);
+                  }}
+                  className="text-[11px] font-bold px-2 py-0.5 bg-black/50 hover:bg-black/70 text-white border border-white/30 rounded-lg shadow-2xs transition active:scale-95 whitespace-nowrap tactile-tap"
                 >
                   -৩ দিন
                 </button>
                 <button
                   type="button"
-                  onClick={() => jumpDaysAgo(7)}
-                  className="text-xs font-black px-3 py-1 bg-black/25 hover:bg-black/40 text-white border border-white/25 rounded-full shadow-xs transition active:scale-95 whitespace-nowrap drop-shadow-[0_1px_3px_rgba(0,0,0,1)]"
+                  onClick={() => {
+                    hapticLight();
+                    jumpDaysAgo(7);
+                  }}
+                  className="text-[11px] font-bold px-2 py-0.5 bg-black/50 hover:bg-black/70 text-white border border-white/30 rounded-lg shadow-2xs transition active:scale-95 whitespace-nowrap tactile-tap"
                 >
                   -৭ দিন
                 </button>
@@ -368,203 +413,302 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         )}
       </div>
 
-      {/* ২. দ্রুত অ্যাকশন বার (Quick Action Bar with New Memo & New Chalan - Compact & Harmonious Colors) */}
+      {/* Onboarding Quick Tips Banner for First-Time Users */}
+      {showTipsBanner && (
+        <div 
+          id="dashboard-onboarding-banner"
+          className="relative overflow-hidden bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 dark:from-amber-950/40 dark:via-slate-900 dark:to-amber-950/40 border-2 border-amber-400/50 dark:border-amber-600/40 rounded-2xl p-3 shadow-xs space-y-2 animate-in slide-in-from-top-2"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-xs shrink-0">
+                <LightbulbRoundedIcon className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span>প্রথমবার ব্যবহারকারীদের জন্য সহজ টিপস</span>
+                  <span className="bg-amber-400 text-slate-950 text-[9.5px] px-1.5 py-0.2 rounded-full font-black">নতুন</span>
+                </h4>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">
+                  মাত্র ৩ ক্লিকে ডিমের ক্যাশ মেমো বানান, বাকি খতিয়ান রাখুন এবং হোয়াটসঅ্যাপে ভাউচার পাঠান।
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                hapticLight();
+                setShowTipsBanner(false);
+                localStorage.setItem('egg_arat_dismiss_quick_tips', 'true');
+              }}
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/5 transition"
+              title="টিপস বন্ধ করুন"
+            >
+              <CloseRoundedIcon className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-2 pt-1 border-t border-amber-300/40 dark:border-amber-800/40">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
+              <span className="bg-white/80 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-slate-700 shrink-0">
+                ১. মেমো তৈরি
+              </span>
+              <span className="bg-white/80 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-slate-700 shrink-0">
+                ২. বাকি আদায়
+              </span>
+              <span className="bg-white/80 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-amber-200 dark:border-slate-700 shrink-0">
+                ৩. চালান খতিয়ান
+              </span>
+            </div>
+
+            {onOpenGuide && (
+              <button
+                type="button"
+                onClick={() => {
+                  hapticMedium();
+                  onOpenGuide();
+                }}
+                className="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black rounded-lg shadow-2xs transition active:scale-95 shrink-0 flex items-center gap-1"
+              >
+                <span>গাইড দেখুন</span>
+                <ArrowOutwardRoundedIcon className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ২. দ্রুত অ্যাকশন বার - Sleek & Attractive Proportional Action Buttons */}
       <div className="space-y-1.5">
         {/* Row 1: The Two Main Creation Actions: New Memo & New Chalan */}
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             id="btn-dashboard-new-memo"
-            onClick={() => onOpenNewMemo(activeDateString || todayStr)}
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2 px-2.5 shadow-sm shadow-blue-600/20 transition active:scale-95 text-center flex items-center justify-between group border border-blue-500/30"
+            onClick={() => {
+              hapticMedium();
+              onOpenNewMemo(activeDateString || todayStr);
+            }}
+            className="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white rounded-xl py-2.5 px-3 transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 text-xs sm:text-sm font-black shadow-md border border-blue-400/50 tactile-tap"
           >
-            <div className="text-left min-w-0">
-              <div className="flex items-center gap-1 font-black text-xs sm:text-sm">
-                <AddIcon className="w-4 h-4 group-hover:rotate-90 transition-transform" />
-                <span>+ নতুন মেমো</span>
-              </div>
-              <span className="text-[9.5px] text-blue-100 font-bold block truncate">ডিম বিক্রি মেমো</span>
-            </div>
-            <span className="text-lg opacity-90 group-hover:scale-110 transition-transform ml-1">📝</span>
+            <AddRoundedIcon className="w-4 h-4" />
+            <span>নতুন বিক্রি মেমো</span>
           </button>
 
           <button
             type="button"
             id="btn-dashboard-new-chalan"
             onClick={() => {
+              hapticMedium();
               if (onOpenNewChalan) onOpenNewChalan(activeDateString || todayStr);
               else if (onGoToSuppliersTab) onGoToSuppliersTab();
             }}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-2 px-2.5 shadow-sm shadow-indigo-600/20 transition active:scale-95 text-center flex items-center justify-between group border border-indigo-500/30"
+            className="bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white rounded-xl py-2.5 px-3 transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 text-xs sm:text-sm font-black shadow-md border border-purple-400/50 tactile-tap"
           >
-            <div className="text-left min-w-0">
-              <div className="flex items-center gap-1 font-black text-xs sm:text-sm">
-                <AddIcon className="w-4 h-4 group-hover:rotate-90 transition-transform" />
-                <span>+ নতুন চালান</span>
-              </div>
-              <span className="text-[9.5px] text-indigo-100 font-bold block truncate">মহাজন ডিম ক্রয়</span>
-            </div>
-            <span className="text-lg opacity-90 group-hover:scale-110 transition-transform ml-1">🚚</span>
+            <AddRoundedIcon className="w-4 h-4" />
+            <span>নতুন মহাজন চালান</span>
           </button>
         </div>
 
-        {/* Row 2: Secondary Quick Shortcuts with Real-time Balances */}
+        {/* Row 2: Secondary Quick Balance Indicators - Ultra-Slim & Sleek */}
         <div className="grid grid-cols-2 gap-1.5">
           <button
             type="button"
-            onClick={onGoToPartiesTab}
-            className="bg-emerald-50/85 dark:bg-emerald-950/35 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/40 text-emerald-950 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800/80 rounded-xl py-1.5 px-2.5 transition active:scale-95 flex items-center justify-between shadow-2xs text-xs font-black"
+            onClick={() => {
+              hapticLight();
+              onGoToPartiesTab();
+            }}
+            className="bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-emerald-500/15 dark:from-emerald-950/40 dark:to-teal-950/25 rounded-lg py-0.5 px-2 h-7 sm:h-7.5 transition-all active:scale-[0.98] flex items-center justify-between text-[10px] sm:text-[11px] font-bold min-w-0 group border border-emerald-300/80 dark:border-emerald-700/70 shadow-2xs hover:shadow-xs"
           >
-            <span className="flex items-center gap-1.5 truncate">
-              <span>👥</span>
-              <span className="truncate">পার্টি বাকি:</span>
-            </span>
-            <span className="text-emerald-700 dark:text-emerald-300 font-mono font-black shrink-0 ml-1">
+            <div className="flex items-center gap-1.5 truncate min-w-0 flex-1">
+              <div className="w-4 h-4 rounded-md bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                <LucideUsers size={10} />
+              </div>
+              <span className="truncate text-emerald-950 dark:text-emerald-200">পার্টি বাকি:</span>
+            </div>
+            <span className="text-emerald-700 dark:text-emerald-300 font-mono font-black shrink-0 ml-1 tabular-nums text-[11px] sm:text-xs">
               {toBnCurrency(parties.reduce((sum, p) => sum + (p.currentDue || 0), 0), useBengali)}
             </span>
           </button>
 
           <button
             type="button"
-            onClick={onGoToSuppliersTab}
-            className="bg-rose-50/85 dark:bg-rose-950/35 hover:bg-rose-100/90 dark:hover:bg-rose-900/40 text-rose-950 dark:text-rose-200 border border-rose-300 dark:border-rose-800/80 rounded-xl py-1.5 px-2.5 transition active:scale-95 flex items-center justify-between shadow-2xs text-xs font-black"
+            onClick={() => {
+              hapticLight();
+              if (onGoToSuppliersTab) onGoToSuppliersTab();
+            }}
+            className="bg-gradient-to-r from-rose-500/15 via-orange-500/10 to-rose-500/15 dark:from-rose-950/40 dark:to-orange-950/25 rounded-lg py-0.5 px-2 h-7 sm:h-7.5 transition-all active:scale-[0.98] flex items-center justify-between text-[10px] sm:text-[11px] font-bold min-w-0 group border border-rose-300/80 dark:border-rose-700/70 shadow-2xs hover:shadow-xs"
           >
-            <span className="flex items-center gap-1.5 truncate">
-              <span>🚛</span>
-              <span className="truncate">মহাজন দেনা:</span>
-            </span>
-            <span className="text-rose-600 dark:text-rose-400 font-mono font-black shrink-0 ml-1">
+            <div className="flex items-center gap-1.5 truncate min-w-0 flex-1">
+              <div className="w-4 h-4 rounded-md bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                <Truck size={10} />
+              </div>
+              <span className="truncate text-rose-950 dark:text-rose-200">মহাজন দেনা:</span>
+            </div>
+            <span className="text-rose-700 dark:text-rose-300 font-mono font-black shrink-0 ml-1 tabular-nums text-[11px] sm:text-xs">
               {toBnCurrency(totalSupplierPayable, useBengali)}
             </span>
           </button>
         </div>
       </div>
 
-      {/* ৩. চারটি মূল হিসাব মেট্রিক কার্ড - উন্নত, আধুনিক, স্পষ্ট ও একনজরে বোধগম্য */}
-      <div className="grid grid-cols-2 gap-2">
-        {/* Metric 1: Total Eggs Sold (Pieces & Khachi) */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl p-3 shadow-xs border-2 border-sky-300 dark:border-sky-800 relative overflow-hidden transition-all hover:border-sky-500 group">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-base">🥚</span>
-              <p className="text-xs text-sky-950 dark:text-sky-200 font-extrabold tracking-tight">
-                মোট ডিম বিক্রি
-              </p>
-            </div>
-            <span className="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse shadow-xs" />
-          </div>
-          <p className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white leading-tight mt-1.5 tabular-nums tracking-tight">
-            {toBengaliNumber(totalEggsSold, useBengali)} <span className="text-xs font-bold text-sky-700 dark:text-sky-300">পিস</span>
-          </p>
-          <div className="mt-1 flex items-center gap-1 flex-wrap">
-            <span className="text-[10.5px] text-sky-950 dark:text-sky-200 font-bold bg-sky-100 dark:bg-sky-950/80 px-2 py-0.5 rounded-md inline-block border border-sky-300 dark:border-sky-800">
-              {toBengaliNumber(Math.floor(totalEggsSold / 30), useBengali)} খাঁচা {totalEggsSold % 30 > 0 ? `+ ${toBengaliNumber(totalEggsSold % 30, useBengali)} পিস` : ''}
+      {/* ৩. আজকের ডিমের বাজার দর (Daily Market Base Rates Widget with Settings Button) */}
+      <div 
+        id="dashboard-base-rates-card"
+        className="glass-card rounded-xl p-2 sm:p-2.5 border shadow-xs space-y-1.5 transition-all"
+      >
+        <div className="flex items-center justify-between gap-1 flex-wrap">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="w-5 h-5 rounded-lg bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center font-black text-[11px] shadow-xs shrink-0 ring-1 ring-amber-400/50">
+              🥚
+            </span>
+            <span className="text-xs font-black text-slate-900 dark:text-white truncate">
+              আজকের ডিমের বাজার দর (প্রতি ১০০ পিস)
             </span>
           </div>
+
+          {onOpenRateSettings && (
+            <button
+              type="button"
+              onClick={() => {
+                hapticLight();
+                onOpenRateSettings();
+              }}
+              className="text-[10px] font-black px-2 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-800 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/80 shadow-2xs flex items-center gap-1 transition active:scale-95 shrink-0"
+              title="বাজার দর পরিবর্তন করুন"
+            >
+              <span>দর পরিবর্তন</span>
+              <ArrowOutwardRoundedIcon className="w-3 h-3" />
+            </button>
+          )}
         </div>
 
-        {/* Metric 2: Total Bill */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl p-3 shadow-xs border-2 border-indigo-300 dark:border-indigo-800 relative overflow-hidden transition-all hover:border-indigo-500 group">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-base">📋</span>
-              <p className="text-xs text-indigo-950 dark:text-indigo-200 font-extrabold tracking-tight">
-                মোট বিক্রি বিল
-              </p>
+        {/* 2 Egg Category Rates Grid (Red & White only, Read-Only) */}
+        <div className="grid grid-cols-2 gap-2 text-center">
+          {/* 1. লাল ডিম */}
+          <div className="p-1.5 rounded-lg bg-rose-50/70 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1 text-[11px] font-black text-rose-700 dark:text-rose-300 shrink-0">
+              <span className="w-2 h-2 rounded-full bg-rose-600 shrink-0" />
+              <span>লাল ডিম:</span>
             </div>
-            <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-xs" />
+            <div className="flex items-center gap-1 min-w-0 flex-1 justify-end">
+              <span className="text-xs font-black text-slate-950 dark:text-white tabular-nums">
+                ৳{toBengaliNumber(baseRate?.redRate || 1170, useBengali)}
+              </span>
+              <span className="text-[9.5px] text-slate-500 dark:text-slate-400 font-bold">
+                (৳{toBengaliNumber(((baseRate?.redRate || 1170) / 100).toFixed(2), useBengali)}/টি)
+              </span>
+            </div>
           </div>
-          <p className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white leading-tight mt-1.5 tabular-nums tracking-tight">
-            {toBnCurrency(totalBill, useBengali)}
-          </p>
-          <div className="mt-1">
-            <span className="text-[10.5px] text-indigo-950 dark:text-indigo-200 font-bold bg-indigo-100 dark:bg-indigo-950/80 px-2 py-0.5 rounded-md inline-block border border-indigo-300 dark:border-indigo-800">
-              {toBengaliNumber(filteredMemos.length, useBengali)} টি মেমো
-            </span>
-          </div>
-        </div>
 
-        {/* Metric 3: Cash Collected */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl p-3 shadow-xs border-2 border-emerald-300 dark:border-emerald-800 relative overflow-hidden transition-all hover:border-emerald-500 group">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-base">💵</span>
-              <p className="text-xs text-emerald-950 dark:text-emerald-200 font-extrabold tracking-tight">
-                নগদ জমা আদায়
-              </p>
+          {/* 2. সাদা ডিম */}
+          <div className="p-1.5 rounded-lg bg-cyan-50/70 dark:bg-cyan-950/40 border border-cyan-200/80 dark:border-cyan-900/60 flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1 text-[11px] font-black text-cyan-700 dark:text-cyan-300 shrink-0">
+              <span className="w-2 h-2 rounded-full bg-cyan-500 shrink-0" />
+              <span>সাদা ডিম:</span>
             </div>
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-xs" />
-          </div>
-          <p className="text-xl sm:text-2xl font-black text-emerald-800 dark:text-emerald-300 leading-tight mt-1.5 tabular-nums tracking-tight">
-            {toBnCurrency(totalCashCollected, useBengali)}
-          </p>
-          <div className="mt-1">
-            <span className="text-[10.5px] text-emerald-950 dark:text-emerald-200 font-bold bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 rounded-md inline-block border border-emerald-300 dark:border-emerald-800">
-              ক্যাশ জমা
-            </span>
-          </div>
-        </div>
-
-        {/* Metric 4: Due Today */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl p-3 shadow-xs border-2 border-rose-300 dark:border-rose-800 relative overflow-hidden transition-all hover:border-rose-500 group">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-base">⚠️</span>
-              <p className="text-xs text-rose-950 dark:text-rose-200 font-extrabold tracking-tight">
-                আজকের বাকি পাওনা
-              </p>
+            <div className="flex items-center gap-1 min-w-0 flex-1 justify-end">
+              <span className="text-xs font-black text-slate-950 dark:text-white tabular-nums">
+                ৳{toBengaliNumber(baseRate?.whiteRate || 1120, useBengali)}
+              </span>
+              <span className="text-[9.5px] text-slate-500 dark:text-slate-400 font-bold">
+                (৳{toBengaliNumber(((baseRate?.whiteRate || 1120) / 100).toFixed(2), useBengali)}/টি)
+              </span>
             </div>
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-xs" />
-          </div>
-          <p className="text-xl sm:text-2xl font-black text-rose-800 dark:text-rose-300 leading-tight mt-1.5 tabular-nums tracking-tight">
-            {toBnCurrency(totalDueToday, useBengali)}
-          </p>
-          <div className="mt-1">
-            <span className="text-[10.5px] text-rose-950 dark:text-rose-200 font-bold bg-rose-100 dark:bg-rose-950/80 px-2 py-0.5 rounded-md inline-block border border-rose-300 dark:border-rose-800">
-              বকেয়া জের
-            </span>
           </div>
         </div>
       </div>
 
-      {/* ৪. রিসেন্ট পার্টি মেমো ও মহাজন খতিয়ান (সিরিয়াল অনুযায়ী উপরে থাকবে) */}
-      <div id="dashboard-recent-memos-section" className="space-y-2">
+      {/* ৪. চারটি মূল হিসাব মেট্রিক কার্ড - Glassmorphism Stats Cards from design snippet */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-2.5 md:gap-3">
+        {/* Metric 1: Total Eggs Sold */}
+        <StatsCard
+          title="মোট ডিম বিক্রি"
+          value={`${toBengaliNumber(totalEggsSold, useBengali)} পিস`}
+          change={`${toBengaliNumber(Math.floor(totalEggsSold / 30), useBengali)} খাঁচা ${totalEggsSold % 30 > 0 ? `+ ${toBengaliNumber(totalEggsSold % 30, useBengali)}` : ''}`}
+          changeType="positive"
+          icon={ShoppingBag}
+          gradient="from-sky-500 to-blue-600"
+        />
+
+        {/* Metric 2: Total Bill */}
+        <StatsCard
+          title="মোট বিক্রি বিল"
+          value={toBnCurrency(totalBill, useBengali)}
+          change={`${toBengaliNumber(filteredMemos.length, useBengali)} টি মেমো`}
+          changeType="positive"
+          icon={LucideReceipt}
+          gradient="from-indigo-500 to-purple-600"
+        />
+
+        {/* Metric 3: Cash Collected */}
+        <StatsCard
+          title="নগদ জমা আদায়"
+          value={toBnCurrency(totalCashCollected, useBengali)}
+          change="ক্যাশ কালেকশন"
+          changeType="positive"
+          icon={DollarSign}
+          gradient="from-emerald-500 to-teal-600"
+        />
+
+        {/* Metric 4: Due Today */}
+        <StatsCard
+          title="আজকের বাকি পাওনা"
+          value={toBnCurrency(totalDueToday, useBengali)}
+          change={totalDueToday > 0 ? "বকেয়া জের" : "পরিশোধিত"}
+          changeType={totalDueToday > 0 ? "negative" : "positive"}
+          icon={Wallet}
+          gradient="from-rose-500 to-orange-500"
+        />
+      </div>
+
+      {/* ৪. রিসেন্ট পার্টি মেমো ও মহাজন খতিয়ান - Material 3 Segmented Lists */}
+      <div id="dashboard-recent-memos-section" className="space-y-2.5">
         <div className="flex items-center justify-between px-0.5 flex-wrap gap-2">
-          {/* Subtab switcher between পার্টির মেমো vs মহাজন খতিয়ান */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs">
+          {/* Subtab switcher between পার্টির মেমো vs মহাজন খতিয়ান - Sleek & Modern */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs">
             <button
               type="button"
               id="dash-subtab-memos"
-              onClick={() => setDashboardListTab('memos')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all active:scale-95 ${
+              onClick={() => {
+                hapticLight();
+                setDashboardListTab('memos');
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black transition-all active:scale-95 tactile-tap ${
                 dashboardListTab === 'memos'
-                  ? 'bg-blue-600 text-white shadow-xs'
+                  ? 'bg-blue-600 text-white shadow-2xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <span>📝 রিসেন্ট পার্টি মেমো</span>
+              <ReceiptLongRoundedIcon className="w-3.5 h-3.5" />
+              <span>রিসেন্ট মেমো</span>
               <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                 dashboardListTab === 'memos' ? 'bg-white/25 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
               }`}>
-                {toBengaliNumber(filteredMemos.length, useBengali)} টি
+                {toBengaliNumber(filteredMemos.length, useBengali)}
               </span>
             </button>
 
             <button
               type="button"
               id="dash-subtab-chalans"
-              onClick={() => setDashboardListTab('chalans')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all active:scale-95 ${
+              onClick={() => {
+                hapticLight();
+                setDashboardListTab('chalans');
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black transition-all active:scale-95 tactile-tap ${
                 dashboardListTab === 'chalans'
-                  ? 'bg-indigo-600 text-white shadow-xs'
+                  ? 'bg-indigo-600 text-white shadow-2xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <span>🚚 মহাজন খতিয়ান</span>
+              <LocalShippingRoundedIcon className="w-3.5 h-3.5" />
+              <span>মহাজন খতিয়ান</span>
               <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                 dashboardListTab === 'chalans' ? 'bg-white/25 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
               }`}>
-                {toBengaliNumber(filteredChalans.length, useBengali)} টি
+                {toBengaliNumber(filteredChalans.length, useBengali)}
               </span>
             </button>
           </div>
@@ -572,21 +716,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="flex items-center gap-1">
             <button
               onClick={dashboardListTab === 'memos' ? onGoToMemosTab : (onGoToSuppliersTab || onGoToPartiesTab)}
-              className="text-xs font-black text-white bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 px-2.5 py-1.5 rounded-lg shadow-2xs transition active:scale-95 flex items-center gap-1"
+              className="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 px-2.5 py-1 rounded-lg shadow-2xs transition active:scale-95 flex items-center gap-1"
             >
               <span>{dashboardListTab === 'memos' ? 'সকল মেমো' : 'সকল মহাজন'}</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
+              <ArrowOutwardRoundedIcon className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* --- ৪.১ রিসেন্ট পার্টির মেমো তালিকা (সিরিয়াল অনুযায়ী উপরে) --- */}
+        {/* Animated Search Bar for Dashboard */}
+        <AnimatedSearchBox
+          id="dash-search-box"
+          value={dashSearch}
+          onChange={setDashSearch}
+          placeholder={dashboardListTab === 'memos' ? "মেমো নং, পার্টির নাম বা ফোন..." : "চালান নং, মহাজনের নাম বা ফোন..."}
+          badgeText="স্মার্ট সার্চ"
+          buttonText="খুঁজুন"
+          compact={true}
+          resultsCount={dashboardListTab === 'memos' ? searchedMemos.length : searchedChalans.length}
+        />
+
+        {/* --- ৪.১ রিসেন্ট পার্টির মেমো তালিকা --- */}
         {dashboardListTab === 'memos' && (
-          <div className="space-y-1.5">
-            {filteredMemos.length === 0 ? (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 text-center border-2 border-dashed border-indigo-200 dark:border-indigo-900/60 space-y-2">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-lg mx-auto shadow-xs">
-                  🥚
+          <div className="space-y-2">
+            {searchedMemos.length === 0 ? (
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 space-y-2.5">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto shadow-xs border border-blue-200 dark:border-blue-800">
+                  <ReceiptLongRoundedIcon className="w-6 h-6" />
                 </div>
                 <div>
                   <h4 className="text-sm font-black text-slate-900 dark:text-white">
@@ -599,15 +755,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onOpenNewMemo(activeDateString || todayStr)}
-                  className="inline-flex items-center gap-1.5 text-xs font-black text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 px-3.5 py-1.5 rounded-xl shadow-xs transition active:scale-95"
+                  className="inline-flex items-center gap-1.5 text-xs font-black text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl shadow-xs transition active:scale-95"
                 >
-                  <AddIcon className="w-3.5 h-3.5 stroke-[3]" />
+                  <AddRoundedIcon className="w-4 h-4" />
                   <span>+ নতুন বিক্রি মেমো লিখুন</span>
                 </button>
               </div>
             ) : (
-              <div className="space-y-1.5">
-                {filteredMemos.map((memo) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
+                {searchedMemos.map((memo) => {
                   const theme = getPartyColorTheme(memo.partyName, memo.partyId);
                   const isFullyPaid = memo.remainingDue <= 0;
                   const typeBadgeStyle = 
@@ -619,11 +775,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <div
                       key={memo.id}
                       onClick={() => onViewMemoVoucher(memo)}
-                      className={`bg-white dark:bg-slate-900 rounded-xl p-2 sm:p-2.5 border-2 border-l-[5px] ${theme.borderLeft} ${theme.border} hover:shadow-md ${theme.hoverBorder} transition-all cursor-pointer space-y-1.5 shadow-2xs`}
+                      className={`glass-card rounded-2xl p-3 border shadow-xs hover:shadow-md transition-all cursor-pointer space-y-2.5 border-l-4 ${theme.borderLeft} ${theme.border}`}
                     >
-                      <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`${theme.memoNumBadge} font-mono font-black text-xs px-2 py-0.5 rounded-lg shadow-2xs`}>
+                      <div className="flex items-center justify-between gap-1 flex-wrap">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className={`${theme.memoNumBadge} font-mono font-black text-[10px] px-1 py-0.2 rounded shadow-2xs`}>
                             {formatDisplayMemoNumber(memo.memoNumber, useBengali)}
                           </span>
                           <button
@@ -648,28 +804,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                                 }
                               }
                             }}
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border ${theme.nameBadge} hover:scale-[1.02] active:scale-95 transition-all text-left shadow-2xs`}
+                            className={`inline-flex items-center gap-1 px-1 py-0.2 rounded border ${theme.nameBadge} hover:scale-[1.01] active:scale-95 transition-all text-left shadow-2xs`}
                             title="ক্লিক করে এই পার্টির সমস্ত মেমো ও হিসাব দেখুন"
                           >
-                            <span className={`w-4 h-4 rounded-md bg-gradient-to-br ${theme.avatarGradient} text-white flex items-center justify-center text-[10px] font-black shrink-0`}>
+                            <span className={`w-3 h-3 rounded bg-gradient-to-br ${theme.avatarGradient} text-white flex items-center justify-center text-[8.5px] font-black shrink-0`}>
                               {memo.partyName.trim().charAt(0)}
                             </span>
-                            <span className="font-black text-xs sm:text-sm">
+                            <span className="font-bold text-[11px] leading-none">
                               {memo.partyName}
                             </span>
-                            <ArrowUpRight className="w-3 h-3 opacity-70 shrink-0" />
+                            <ArrowOutwardRoundedIcon className="w-2.5 h-2.5 opacity-60 shrink-0" />
                           </button>
-                          <span className={`text-[10px] px-1.5 py-0.2 rounded-md font-bold border ${typeBadgeStyle}`}>
+                          <span className={`text-[8.5px] px-1 py-0.2 rounded font-bold border ${typeBadgeStyle}`}>
                             {memo.partyType}
                           </span>
                         </div>
-                        <span className="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 shadow-2xs">
-                          📅 {memo.formattedDate}
+                        <span className="text-[9.5px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 px-1 py-0.2 rounded border border-slate-200 dark:border-slate-700 shadow-2xs">
+                          <CalendarTodayRoundedIcon className="w-2.5 h-2.5 text-slate-500" />
+                          <span>{memo.formattedDate}</span>
                         </span>
                       </div>
 
-                      {/* Serialized Egg items with rates and total */}
-                      <div className="space-y-0.5">
+                      {/* Serialized Egg items with rates and total - ultra compact */}
+                      <div className="space-y-0.5 my-0.5">
                         {memo.items.map((it, idx) => {
                           if (!it.count || it.count <= 0) return null;
                           const isRed = it.eggType === 'লাল ডিম';
@@ -680,7 +837,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           return (
                             <div
                               key={idx}
-                              className={`flex items-center justify-between text-[11px] font-bold px-2 py-0.5 rounded-md border ${
+                              className={`flex items-center justify-between text-[10px] sm:text-[10.5px] font-bold px-1.5 py-0.2 rounded border ${
                                 isRed
                                   ? 'bg-rose-50/90 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-950 dark:text-rose-100'
                                   : isWhite
@@ -688,15 +845,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                                   : 'bg-purple-50/90 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800 text-purple-950 dark:text-purple-100'
                               }`}
                             >
-                              <div className="flex items-center gap-1.5 min-w-0 truncate">
-                                <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-black text-white shrink-0 ${isRed ? 'bg-rose-600' : isWhite ? 'bg-cyan-600' : 'bg-purple-600'}`}>
+                              <div className="flex items-center gap-1 min-w-0 flex-1 truncate">
+                                <span className={`w-3 h-3 rounded-full flex items-center justify-center text-[8.5px] font-black text-white shrink-0 ${isRed ? 'bg-rose-600' : isWhite ? 'bg-cyan-600' : 'bg-purple-600'}`}>
                                   {toBengaliNumber(idx + 1, useBengali)}
                                 </span>
                                 <span className="truncate">
-                                  {toBengaliNumber(it.count, useBengali)} {it.eggType} {toBengaliNumber(rateHundred, useBengali)} টাকা করে
+                                  {toBengaliNumber(it.count, useBengali)} {it.eggType} {toBengaliNumber(rateHundred, useBengali)} টাকা
                                 </span>
                               </div>
-                              <span className="font-black text-slate-950 dark:text-white tabular-nums shrink-0 ml-2">
+                              <span className="font-black text-slate-950 dark:text-white tabular-nums shrink-0 ml-1 whitespace-nowrap text-right">
                                 = {toBnCurrency(itemTotal, useBengali)}
                               </span>
                             </div>
@@ -705,59 +862,69 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       </div>
 
                       {memo.note && (
-                        <p className="text-[11px] text-slate-800 dark:text-slate-200 font-bold italic bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md">
+                        <p className="text-[9.5px] text-slate-800 dark:text-slate-200 font-bold italic bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.2 rounded">
                           "{memo.note}"
                         </p>
                       )}
 
-                      <div className="flex items-center justify-between pt-0.5 border-t border-slate-100 dark:border-slate-800">
-                        <div className="space-y-0.5">
-                          <span className="text-xs font-black text-slate-950 dark:text-white block tabular-nums">
-                            মোট দাবি: {toBnCurrency(memo.totalDemand, useBengali)}
+                      <div className="flex items-center justify-between gap-1 pt-0.5 border-t border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-1 flex-wrap min-w-0 text-[10px] sm:text-[10.5px]">
+                          <span className="font-black text-slate-950 dark:text-white tabular-nums">
+                            দাবি: {toBnCurrency(memo.totalDemand, useBengali)}
                           </span>
-                          <div className="text-xs font-bold">
-                            {isFullyPaid ? (
-                              <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 px-2 py-0.2 rounded-md border border-emerald-300 dark:border-emerald-700 text-[11px]">
-                                <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> পরিশোধিত
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 bg-rose-100 dark:bg-rose-950/80 text-rose-950 dark:text-rose-200 px-2 py-0.2 rounded-md border border-rose-300 dark:border-rose-700 tabular-nums text-[11px]">
-                                বাকি: {toBnCurrency(memo.remainingDue, useBengali)}
-                              </span>
-                            )}
-                          </div>
+                          {isFullyPaid ? (
+                            <span className="inline-flex items-center gap-0.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 px-1 py-0.2 rounded border border-emerald-300 dark:border-emerald-700 text-[9.5px] font-bold">
+                              <CheckCircleRoundedIcon className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" /> পরিশোধ
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-0.5 bg-rose-100 dark:bg-rose-950/80 text-rose-950 dark:text-rose-200 px-1 py-0.2 rounded border border-rose-300 dark:border-rose-700 tabular-nums text-[9.5px] font-bold">
+                              বাকি: {toBnCurrency(memo.remainingDue, useBengali)}
+                            </span>
+                          )}
                         </div>
 
-                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                           <button
                             title="মেমো দেখুন"
-                            onClick={() => onViewMemoVoucher(memo)}
-                            className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/80 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 transition active:scale-95 shadow-2xs"
+                            onClick={() => {
+                              hapticLight();
+                              onViewMemoVoucher(memo);
+                            }}
+                            className="p-1 rounded bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/80 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 transition active:scale-95 shadow-2xs tactile-tap"
                           >
-                            <Eye className="w-3.5 h-3.5" />
+                            <VisibilityRoundedIcon style={{ fontSize: '13px' }} />
                           </button>
                           <button
                             title="প্রিন্ট করুন"
-                            onClick={() => onViewMemoVoucher(memo)}
-                            className="p-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/80 dark:hover:bg-purple-900 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 transition active:scale-95 shadow-2xs"
+                            onClick={() => {
+                              hapticLight();
+                              onViewMemoVoucher(memo);
+                            }}
+                            className="p-1 rounded bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/80 dark:hover:bg-purple-900 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 transition active:scale-95 shadow-2xs tactile-tap"
                           >
-                            <Printer className="w-3.5 h-3.5" />
+                            <PrintRoundedIcon style={{ fontSize: '13px' }} />
                           </button>
                           <button
                             title="হোয়াটসঅ্যাপে শেয়ার"
-                            onClick={(e) => handleShareVoucher(memo, e)}
-                            className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition active:scale-95 shadow-2xs"
+                            onClick={(e) => {
+                              hapticMedium();
+                              handleShareVoucher(memo, e);
+                            }}
+                            className="p-1 rounded bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition active:scale-95 shadow-2xs tactile-tap"
                           >
-                            <Share2 className="w-3.5 h-3.5" />
+                            <ShareRoundedIcon style={{ fontSize: '13px' }} />
                           </button>
                           {onDeleteMemo && (
                             <button
                               title="মেমো মুছুন"
                               type="button"
-                              onClick={() => setMemoToDelete(memo)}
-                              className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition active:scale-95 shadow-2xs"
+                              onClick={() => {
+                                hapticCancel();
+                                setMemoToDelete(memo);
+                              }}
+                              className="p-1 rounded bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition active:scale-95 shadow-2xs tactile-tap"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <DeleteOutlineRoundedIcon style={{ fontSize: '13px' }} />
                             </button>
                           )}
                         </div>
@@ -770,13 +937,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         )}
 
-        {/* --- ৪.২ মহাজন খতিয়ান (ক্রয় চালান তালিকা - সিরিয়াল অনুযায়ী উপরে) --- */}
+        {/* --- ৪.২ মহাজন খতিয়ান (ক্রয় চালান তালিকা) --- */}
         {dashboardListTab === 'chalans' && (
-          <div className="space-y-1.5">
-            {filteredChalans.length === 0 ? (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 text-center border-2 border-dashed border-indigo-200 dark:border-indigo-900/60 space-y-2">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center text-lg mx-auto shadow-xs">
-                  🚚
+          <div className="space-y-2">
+            {searchedChalans.length === 0 ? (
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 space-y-2.5">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto shadow-xs border border-indigo-200 dark:border-indigo-800">
+                  <LocalShippingRoundedIcon className="w-6 h-6" />
                 </div>
                 <div>
                   <h4 className="text-sm font-black text-slate-900 dark:text-white">
@@ -792,15 +959,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     if (onOpenNewChalan) onOpenNewChalan(activeDateString || todayStr);
                     else if (onGoToSuppliersTab) onGoToSuppliersTab();
                   }}
-                  className="inline-flex items-center gap-1.5 text-xs font-black text-white bg-gradient-to-r from-purple-700 via-indigo-600 to-blue-700 hover:opacity-95 px-3.5 py-1.5 rounded-xl shadow-xs transition active:scale-95"
+                  className="inline-flex items-center gap-1.5 text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-xl shadow-xs transition active:scale-95"
                 >
-                  <AddIcon className="w-3.5 h-3.5 stroke-[3]" />
+                  <AddRoundedIcon className="w-4 h-4" />
                   <span>+ নতুন চালান যুক্ত করুন</span>
                 </button>
               </div>
             ) : (
-              <div className="space-y-1.5">
-                {filteredChalans.map((chalan) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
+                {searchedChalans.map((chalan) => {
                   const remDue = chalan.remainingDue !== undefined ? chalan.remainingDue : (chalan.dueAmount || 0);
                   const isFullyPaid = remDue <= 0;
 
@@ -808,11 +975,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <div
                       key={chalan.id}
                       onClick={() => onViewChalanVoucher && onViewChalanVoucher(chalan)}
-                      className="bg-white dark:bg-slate-900 rounded-xl p-2 sm:p-2.5 border-2 border-l-[5px] border-l-purple-600 border-purple-200 dark:border-purple-800/80 hover:shadow-md transition-all cursor-pointer space-y-1.5 shadow-2xs"
+                      className="glass-card rounded-2xl p-3 border shadow-xs hover:shadow-md transition-all cursor-pointer space-y-2.5 border-l-4 border-l-purple-600 border-purple-200 dark:border-purple-800/80"
                     >
-                      <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="bg-purple-100 dark:bg-purple-950/80 text-purple-950 dark:text-purple-200 border border-purple-300 dark:border-purple-700 font-mono font-black text-xs px-2 py-0.5 rounded-lg shadow-2xs">
+                      <div className="flex items-center justify-between gap-1 flex-wrap">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className="bg-purple-100 dark:bg-purple-950/80 text-purple-950 dark:text-purple-200 border border-purple-300 dark:border-purple-700 font-mono font-black text-[10px] px-1 py-0.2 rounded shadow-2xs">
                             {formatDisplayChalanNumber(chalan.chalanNumber, useBengali)}
                           </span>
                           <button
@@ -828,74 +995,75 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                                 }
                               }
                             }}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border bg-purple-50 dark:bg-purple-950/50 border-purple-300 dark:border-purple-700 text-purple-950 dark:text-purple-100 hover:scale-[1.02] active:scale-95 transition-all text-left shadow-2xs"
+                            className="inline-flex items-center gap-1 px-1 py-0.2 rounded border bg-purple-50 dark:bg-purple-950/50 border-purple-300 dark:border-purple-700 text-purple-950 dark:text-purple-100 hover:scale-[1.01] active:scale-95 transition-all text-left shadow-2xs"
                             title="ক্লিক করে এই মহাজনের খতিয়ান দেখুন"
                           >
-                            <span className="w-4 h-4 rounded-md bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center text-[10px] font-black shrink-0">
+                            <span className="w-3 h-3 rounded bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center text-[8.5px] font-black shrink-0">
                               {chalan.supplierName.trim().charAt(0)}
                             </span>
-                            <span className="font-black text-xs sm:text-sm">
+                            <span className="font-bold text-[11px] leading-none">
                               {chalan.supplierName}
                             </span>
-                            <ArrowUpRight className="w-3 h-3 opacity-70 shrink-0" />
+                            <ArrowOutwardRoundedIcon className="w-2.5 h-2.5 opacity-60 shrink-0" />
                           </button>
                           {chalan.truckNumber && (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded-md font-bold border bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700 flex items-center gap-1">
-                              <span>🚚</span>
+                            <span className="text-[8.5px] px-1 py-0.2 rounded font-bold border bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700 flex items-center gap-0.5">
+                              <LocalShippingRoundedIcon className="w-2.5 h-2.5 text-slate-500" />
                               <span>{chalan.truckNumber}</span>
                             </span>
                           )}
                         </div>
-                        <span className="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 shadow-2xs">
-                          📅 {chalan.formattedDate}
+                        <span className="text-[9.5px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 px-1 py-0.2 rounded border border-slate-200 dark:border-slate-700 shadow-2xs">
+                          <CalendarTodayRoundedIcon className="w-2.5 h-2.5 text-slate-500" />
+                          <span>{chalan.formattedDate}</span>
                         </span>
                       </div>
 
-                      {/* Egg summary items */}
-                      <div className="space-y-0.5">
+                      {/* Egg summary items - ultra compact */}
+                      <div className="space-y-0.5 my-0.5">
                         {chalan.redEggCount && chalan.redEggCount > 0 ? (
-                          <div className="flex items-center justify-between text-[11px] font-bold px-2 py-0.5 rounded-md border bg-rose-50/90 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-950 dark:text-rose-100">
-                            <div className="flex items-center gap-1.5 min-w-0 truncate">
-                              <span className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-black text-white shrink-0 bg-rose-600">
+                          <div className="flex items-center justify-between text-[10px] sm:text-[10.5px] font-bold px-1.5 py-0.2 rounded border bg-rose-50/90 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-950 dark:text-rose-100">
+                            <div className="flex items-center gap-1 min-w-0 flex-1 truncate">
+                              <span className="w-3 h-3 rounded-full flex items-center justify-center text-[8.5px] font-black text-white shrink-0 bg-rose-600">
                                 ১
                               </span>
                               <span className="truncate">
-                                {toBengaliNumber(chalan.redEggCount, useBengali)} লাল ডিম {toBengaliNumber(chalan.redRatePerHundred || 0, useBengali)} টাকা করে
+                                {toBengaliNumber(chalan.redEggCount, useBengali)} লাল ডিম {toBengaliNumber(chalan.redRatePerHundred || 0, useBengali)} টাকা
                               </span>
                             </div>
-                            <span className="font-black text-slate-950 dark:text-white tabular-nums shrink-0 ml-2">
+                            <span className="font-black text-slate-950 dark:text-white tabular-nums shrink-0 ml-1 whitespace-nowrap text-right">
                               = {toBnCurrency(chalan.redTotalAmount || 0, useBengali)}
                             </span>
                           </div>
                         ) : null}
 
                         {chalan.whiteEggCount && chalan.whiteEggCount > 0 ? (
-                          <div className="flex items-center justify-between text-[11px] font-bold px-2 py-0.5 rounded-md border bg-cyan-50/90 dark:bg-cyan-950/40 border-cyan-200 dark:border-cyan-800 text-cyan-950 dark:text-cyan-100">
-                            <div className="flex items-center gap-1.5 min-w-0 truncate">
-                              <span className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-black text-white shrink-0 bg-cyan-600">
+                          <div className="flex items-center justify-between text-[10px] sm:text-[10.5px] font-bold px-1.5 py-0.2 rounded border bg-cyan-50/90 dark:bg-cyan-950/40 border-cyan-200 dark:border-cyan-800 text-cyan-950 dark:text-cyan-100">
+                            <div className="flex items-center gap-1 min-w-0 flex-1 truncate">
+                              <span className="w-3 h-3 rounded-full flex items-center justify-center text-[8.5px] font-black text-white shrink-0 bg-cyan-600">
                                 {chalan.redEggCount && chalan.redEggCount > 0 ? '২' : '১'}
                               </span>
                               <span className="truncate">
-                                {toBengaliNumber(chalan.whiteEggCount, useBengali)} সাদা ডিম {toBengaliNumber(chalan.whiteRatePerHundred || 0, useBengali)} টাকা করে
+                                {toBengaliNumber(chalan.whiteEggCount, useBengali)} সাদা ডিম {toBengaliNumber(chalan.whiteRatePerHundred || 0, useBengali)} টাকা
                               </span>
                             </div>
-                            <span className="font-black text-slate-950 dark:text-white tabular-nums shrink-0 ml-2">
+                            <span className="font-black text-slate-950 dark:text-white tabular-nums shrink-0 ml-1 whitespace-nowrap text-right">
                               = {toBnCurrency(chalan.whiteTotalAmount || 0, useBengali)}
                             </span>
                           </div>
                         ) : null}
 
                         {!chalan.redEggCount && !chalan.whiteEggCount && chalan.eggCount > 0 && (
-                          <div className="flex items-center justify-between text-[11px] font-bold px-2 py-0.5 rounded-md border bg-purple-50/90 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800 text-purple-950 dark:text-purple-100">
-                            <div className="flex items-center gap-1.5 min-w-0 truncate">
-                              <span className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-black text-white shrink-0 bg-purple-600">
+                          <div className="flex items-center justify-between text-[10px] sm:text-[10.5px] font-bold px-1.5 py-0.2 rounded border bg-purple-50/90 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800 text-purple-950 dark:text-purple-100">
+                            <div className="flex items-center gap-1 min-w-0 flex-1 truncate">
+                              <span className="w-3 h-3 rounded-full flex items-center justify-center text-[8.5px] font-black text-white shrink-0 bg-purple-600">
                                 ১
                               </span>
                               <span className="truncate">
-                                {toBengaliNumber(chalan.eggCount, useBengali)} পিস ডিম {chalan.ratePerHundred ? `${toBengaliNumber(chalan.ratePerHundred, useBengali)} টাকা করে` : ''} {chalan.khachaCount ? `(${toBengaliNumber(chalan.khachaCount, useBengali)} খাঁচা)` : ''}
+                                {toBengaliNumber(chalan.eggCount, useBengali)} পিস {chalan.ratePerHundred ? `${toBengaliNumber(chalan.ratePerHundred, useBengali)} টাকা` : ''}
                               </span>
                             </div>
-                            <span className="font-black text-slate-950 dark:text-white tabular-nums shrink-0 ml-2">
+                            <span className="font-black text-slate-950 dark:text-white tabular-nums shrink-0 ml-1 whitespace-nowrap text-right">
                               = {toBnCurrency(chalan.totalAmount, useBengali)}
                             </span>
                           </div>
@@ -903,54 +1071,61 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       </div>
 
                       {chalan.note && (
-                        <p className="text-[11px] text-slate-800 dark:text-slate-200 font-bold italic bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md">
+                        <p className="text-[9.5px] text-slate-800 dark:text-slate-200 font-bold italic bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.2 rounded">
                           "{chalan.note}"
                         </p>
                       )}
 
-                      <div className="flex items-center justify-between pt-0.5 border-t border-slate-100 dark:border-slate-800">
-                        <div className="space-y-0.5">
-                          <span className="text-xs font-black text-slate-950 dark:text-white block tabular-nums">
-                            মোট বিল: {toBnCurrency(chalan.totalAmount, useBengali)}
+                      <div className="flex items-center justify-between gap-1 pt-0.5 border-t border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-1 flex-wrap min-w-0 text-[10px] sm:text-[10.5px]">
+                          <span className="font-black text-slate-950 dark:text-white tabular-nums">
+                            বিল: {toBnCurrency(chalan.totalAmount, useBengali)}
                           </span>
-                          <div className="text-xs font-bold">
-                            {isFullyPaid ? (
-                              <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 px-2 py-0.2 rounded-md border border-emerald-300 dark:border-emerald-700 text-[11px]">
-                                <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> পরিশোধিত
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 bg-rose-100 dark:bg-rose-950/80 text-rose-950 dark:text-rose-200 px-2 py-0.2 rounded-md border border-rose-300 dark:border-rose-700 tabular-nums text-[11px]">
-                                দেনা: {toBnCurrency(remDue, useBengali)}
-                              </span>
-                            )}
-                          </div>
+                          {isFullyPaid ? (
+                            <span className="inline-flex items-center gap-0.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 px-1 py-0.2 rounded border border-emerald-300 dark:border-emerald-700 text-[9.5px] font-bold">
+                              <CheckCircleRoundedIcon className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" /> পরিশোধ
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-0.5 bg-rose-100 dark:bg-rose-950/80 text-rose-950 dark:text-rose-200 px-1 py-0.2 rounded border border-rose-300 dark:border-rose-700 tabular-nums text-[9.5px] font-bold">
+                              দেনা: {toBnCurrency(remDue, useBengali)}
+                            </span>
+                          )}
                         </div>
 
-                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                           {onViewChalanVoucher && (
                             <button
                               title="চালান ভাউচার দেখুন"
-                              onClick={() => onViewChalanVoucher(chalan)}
-                              className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/80 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 transition active:scale-95 shadow-2xs"
+                              onClick={() => {
+                                hapticLight();
+                                onViewChalanVoucher(chalan);
+                              }}
+                              className="p-1 rounded bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/80 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 transition active:scale-95 shadow-2xs tactile-tap"
                             >
-                              <Eye className="w-3.5 h-3.5" />
+                              <VisibilityRoundedIcon style={{ fontSize: '13px' }} />
                             </button>
                           )}
                           <button
                             title="হোয়াটসঅ্যাপে শেয়ার"
-                            onClick={(e) => handleShareChalan(chalan, e)}
-                            className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition active:scale-95 shadow-2xs"
+                            onClick={(e) => {
+                              hapticMedium();
+                              handleShareChalan(chalan, e);
+                            }}
+                            className="p-1 rounded bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition active:scale-95 shadow-2xs tactile-tap"
                           >
-                            <Share2 className="w-3.5 h-3.5" />
+                            <ShareRoundedIcon style={{ fontSize: '13px' }} />
                           </button>
                           {onDeleteChalan && (
                             <button
                               title="চালান মুছুন"
                               type="button"
-                              onClick={() => setChalanToDelete(chalan)}
-                              className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition active:scale-95 shadow-2xs"
+                              onClick={() => {
+                                hapticCancel();
+                                setChalanToDelete(chalan);
+                              }}
+                              className="p-1 rounded bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition active:scale-95 shadow-2xs tactile-tap"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <DeleteOutlineRoundedIcon style={{ fontSize: '13px' }} />
                             </button>
                           )}
                         </div>
@@ -964,27 +1139,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         )}
       </div>
 
-      {/* ৫. খতিয়ান ও বাকি হিসাব - পাশাপাশি বা পরপর কমপ্যাক্ট সারসংক্ষেপ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      {/* ৫. খতিয়ান ও বাকি হিসাব - Material 3 Surface Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* ৫.১ শীর্ষ বকেয়া খরিদ্দার (পার্টি বাকি খাতা) */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl p-2.5 shadow-xs border border-rose-200 dark:border-rose-900/60 space-y-2">
+        <div className="glass-card rounded-2xl p-3.5 shadow-xs border border-rose-200/80 dark:border-rose-900/60 space-y-2.5 hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm">👥</span>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200 dark:border-rose-800/60">
+                <PeopleAltRoundedIcon className="w-4 h-4" />
+              </div>
               <span className="text-slate-900 dark:text-white font-black text-xs sm:text-sm">বাকি খরিদ্দার (পার্টি খাতা)</span>
             </div>
             <button
               onClick={onGoToPartiesTab}
-              className="text-[11px] text-white font-extrabold bg-rose-600 hover:bg-rose-700 px-2 py-0.5 rounded-md shadow-2xs flex items-center gap-1 transition active:scale-95"
+              className="text-[11px] text-white font-extrabold bg-rose-600 hover:bg-rose-700 px-2.5 py-1 rounded-lg shadow-2xs flex items-center gap-1 transition active:scale-95"
             >
               <span>সকল বাকি</span>
-              <ArrowUpRight className="w-3 h-3" />
+              <ArrowOutwardRoundedIcon className="w-3.5 h-3.5" />
             </button>
           </div>
 
           {dueParties.length === 0 ? (
-            <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 text-xs">
-              <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 text-xs">
+              <CheckCircleRoundedIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span className="font-bold text-emerald-950 dark:text-emerald-200 text-xs">
                 কোনো বকেয়া নেই (সকল পাওনা পরিশোধিত)
               </span>
@@ -997,23 +1174,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <div
                     key={party.id}
                     onClick={() => (onOpenPartyDetails ? onOpenPartyDetails(party) : onSelectParty(party))}
-                    className="p-2 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between cursor-pointer transition-all shadow-2xs group"
+                    className="p-2.5 bg-slate-50/80 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between cursor-pointer transition-all shadow-2xs group"
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${theme.avatarGradient} text-white flex items-center justify-center font-black text-xs shadow-xs shrink-0`}>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${theme.avatarGradient} text-white flex items-center justify-center font-black text-xs shadow-xs shrink-0`}>
                         {party.name.trim().charAt(0)}
                       </div>
                       <div className="min-w-0">
-                        <span className="font-black text-xs text-slate-900 dark:text-white block truncate">
+                        <span className="font-black text-xs text-slate-950 dark:text-white block truncate">
                           {party.name}
                         </span>
                         {party.phone && (
                           <a 
                             href={`tel:${party.phone}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="text-[11px] text-blue-600 dark:text-blue-400 font-bold flex items-center gap-0.5 hover:underline"
+                            className="text-[11px] text-blue-600 dark:text-blue-400 font-bold flex items-center gap-1 hover:underline mt-0.5"
                           >
-                            <Phone className="w-2.5 h-2.5" />
+                            <CallRoundedIcon className="w-3 h-3" />
                             <span>{party.phone}</span>
                           </a>
                         )}
@@ -1021,7 +1198,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     </div>
 
                     <div className="text-right shrink-0 ml-2">
-                      <span className="text-[9.5px] text-rose-700 dark:text-rose-400 font-bold block">বাকি</span>
+                      <span className="text-[10px] text-rose-700 dark:text-rose-400 font-bold block">বাকি পাওনা</span>
                       <span className="text-xs font-black text-rose-700 dark:text-rose-300 font-mono tabular-nums">
                         {toBnCurrency(party.currentDue, useBengali)}
                       </span>
@@ -1034,24 +1211,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* ৫.২ শীর্ষ দেনা মহাজন (মহাজন দেনা খতিয়ান) */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl p-2.5 shadow-xs border border-purple-200 dark:border-purple-900/60 space-y-2">
+        <div className="glass-card rounded-2xl p-3.5 shadow-xs border border-purple-200/80 dark:border-purple-900/60 space-y-2.5 hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm">🚛</span>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800/60">
+                <LocalShippingRoundedIcon className="w-4 h-4" />
+              </div>
               <span className="text-slate-900 dark:text-white font-black text-xs sm:text-sm">মহাজন দেনা (মহাজন খতিয়ান)</span>
             </div>
             <button
               onClick={onGoToSuppliersTab}
-              className="text-[11px] text-white font-extrabold bg-indigo-600 hover:bg-indigo-700 px-2 py-0.5 rounded-md shadow-2xs flex items-center gap-1 transition active:scale-95"
+              className="text-[11px] text-white font-extrabold bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded-lg shadow-2xs flex items-center gap-1 transition active:scale-95"
             >
               <span>সকল মহাজন</span>
-              <ArrowUpRight className="w-3 h-3" />
+              <ArrowOutwardRoundedIcon className="w-3.5 h-3.5" />
             </button>
           </div>
 
           {dueSuppliers.length === 0 ? (
-            <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 text-xs">
-              <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 text-xs">
+              <CheckCircleRoundedIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span className="font-bold text-emerald-950 dark:text-emerald-200 text-xs">
                 কোনো মহাজন দেনা নেই (সকল বিল পরিশোধিত)
               </span>
@@ -1062,23 +1241,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <div
                   key={supplier.id}
                   onClick={() => onOpenSupplierDetails && onOpenSupplierDetails(supplier)}
-                  className="p-2 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between cursor-pointer transition-all shadow-2xs group"
+                  className="p-2.5 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between cursor-pointer transition-all shadow-2xs group"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-xs shrink-0">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-xs shrink-0">
                       {supplier.name.trim().charAt(0)}
                     </div>
                     <div className="min-w-0">
-                      <span className="font-black text-xs text-slate-900 dark:text-white block truncate">
+                      <span className="font-black text-xs text-slate-950 dark:text-white block truncate">
                         {supplier.name}
                       </span>
                       {supplier.phone && (
                         <a 
                           href={`tel:${supplier.phone}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="text-[11px] text-blue-600 dark:text-blue-400 font-bold flex items-center gap-0.5 hover:underline"
+                          className="text-[11px] text-blue-600 dark:text-blue-400 font-bold flex items-center gap-1 hover:underline mt-0.5"
                         >
-                          <Phone className="w-2.5 h-2.5" />
+                          <CallRoundedIcon className="w-3 h-3" />
                           <span>{supplier.phone}</span>
                         </a>
                       )}
@@ -1086,7 +1265,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </div>
 
                   <div className="text-right shrink-0 ml-2">
-                    <span className="text-[9.5px] text-rose-700 dark:text-rose-400 font-bold block">দেনা</span>
+                    <span className="text-[10px] text-rose-700 dark:text-rose-400 font-bold block">দেনা বাকি</span>
                     <span className="text-xs font-black text-rose-700 dark:text-rose-300 font-mono tabular-nums">
                       {toBnCurrency(supplier.totalPayable, useBengali)}
                     </span>

@@ -8,20 +8,20 @@ import {
   getDayOfWeekBn,
   toBengaliNumber, 
   toBnCurrency,
+  formatTypingNumber,
   convertEnToBnDigits,
   convertBnToEnDigits,
   parseBengaliToNumber,
   getNextMemoSequenceNumber,
   formatDisplayMemoNumber
 } from '../utils/bengaliUtils';
-import { 
-  X, 
-  Plus, 
-  Trash2, 
-  ArrowRight,
-  Hash
-} from 'lucide-react';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+import TagRoundedIcon from '@mui/icons-material/TagRounded';
+import CalendarTodayRoundedIcon from '@mui/icons-material/CalendarTodayRounded';
+import { hapticLight, hapticMedium, hapticSuccess, hapticWarning, hapticError, hapticCancel } from '../utils/haptics';
 
 interface NewMemoModalProps {
   isOpen: boolean;
@@ -95,7 +95,7 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
         setPartyType(initialSelectedParty.type || 'পাইকারি');
         const due = Number(initialSelectedParty.currentDue) || 0;
         setPreviousDue(due);
-        setPreviousDueStr(due > 0 ? convertEnToBnDigits(due, false) : '');
+        setPreviousDueStr(due > 0 ? formatTypingNumber(due, false, useBengali) : '');
       } else {
         setPartyMode(parties.length > 0 ? 'saved' : 'new');
         setSelectedPartyId('');
@@ -175,7 +175,7 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
       setPartyType(found.type || 'পাইকারি');
       const due = Number(found.currentDue) || 0;
       setPreviousDue(due);
-      setPreviousDueStr(due > 0 ? convertEnToBnDigits(due, false) : '');
+      setPreviousDueStr(due > 0 ? formatTypingNumber(due, false, useBengali) : '');
     }
   };
 
@@ -192,7 +192,7 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
       setPartyType(matched.type || 'পাইকারি');
       const due = Number(matched.currentDue) || 0;
       setPreviousDue(due);
-      setPreviousDueStr(due > 0 ? convertEnToBnDigits(due, false) : '');
+      setPreviousDueStr(due > 0 ? formatTypingNumber(due, false, useBengali) : '');
     } else {
       setPreviousDue(0);
       setPreviousDueStr('');
@@ -247,6 +247,7 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
 
   // Quick piece shortcut: +100, +500, +1000, +30
   const handleAddPiecesShortcut = (idx: number, delta: number) => {
+    hapticLight();
     const updated = [...items];
     const current = updated[idx].count || 0;
     const newCount = Math.max(0, current + delta);
@@ -255,9 +256,9 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
     updated[idx].totalAmount = Math.round(newCount * pieceRate);
     setItems(updated);
     if (updated[idx].eggType === 'লাল ডিম') {
-      setRedCountStr(newCount > 0 ? convertEnToBnDigits(newCount, false) : '');
+      setRedCountStr(newCount > 0 ? formatTypingNumber(newCount, false, useBengali) : '');
     } else if (updated[idx].eggType === 'সাদা ডিম') {
-      setWhiteCountStr(newCount > 0 ? convertEnToBnDigits(newCount, false) : '');
+      setWhiteCountStr(newCount > 0 ? formatTypingNumber(newCount, false, useBengali) : '');
     }
   };
 
@@ -282,6 +283,7 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
   };
 
   const addItem = () => {
+    hapticMedium();
     setItems([
       ...items,
       {
@@ -297,12 +299,14 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
 
   const removeItem = (idx: number) => {
     if (items.length <= 1) return;
+    hapticWarning();
     setItems(items.filter((_, i) => i !== idx));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!partyName.trim()) {
+      hapticError();
       if (partyMode === 'saved') {
         alert('অনুগ্রহ করে তালিকা থেকে সেভ করা পার্টি সিলেক্ট করুন অথবা নতুন পার্টির নাম লিখুন');
       } else {
@@ -344,6 +348,7 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
       createdAt: new Date().toISOString(),
     };
 
+    hapticSuccess();
     onSaveMemo(newMemo, remainingDue);
     onClose();
   };
@@ -362,37 +367,40 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
     >
       <div 
         id="new-memo-modal-container"
-        className="bg-white dark:bg-stone-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden my-0 mt-0.5 sm:mt-1 border border-indigo-200 dark:border-stone-800 text-stone-900 dark:text-stone-100 flex flex-col max-h-[97vh]"
+        className="soft-elevated modal-enter w-full max-w-lg md:max-w-2xl rounded-3xl overflow-hidden my-0 mt-0.5 sm:mt-1 border border-indigo-200/80 dark:border-stone-800 text-stone-900 dark:text-stone-100 flex flex-col max-h-[97vh]"
       >
-        {/* 1. Modal Header with Clear Title and Memo Number */}
-        <div className="relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-3.5 py-2 flex items-center justify-between shadow-xs">
-          <div className="flex items-center gap-1.5">
+        {/* 1. Modal Header with Material 3 Bar */}
+        <div className="relative bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white px-4 py-2.5 flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2">
             <span className="text-base">🥚</span>
-            <h2 className="font-black text-xs sm:text-sm tracking-wide leading-tight">নতুন বিক্রয় মেমো (ক্যাশ ও বাকি)</h2>
+            <h2 className="font-bold text-xs sm:text-sm tracking-wide leading-tight">নতুন বিক্রয় মেমো (ক্যাশ ও বাকি)</h2>
           </div>
           <button
             id="close-memo-modal-btn"
             type="button"
-            onClick={onClose}
-            className="w-6.5 h-6.5 rounded-full bg-black/25 hover:bg-black/40 active:scale-90 flex items-center justify-center text-white transition ring-1 ring-white/30 shadow-xs"
+            onClick={() => {
+              hapticCancel();
+              onClose();
+            }}
+            className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 active:scale-90 flex items-center justify-center text-white transition shadow-xs"
             title="মেমো বন্ধ করুন"
           >
-            <X className="w-3.5 h-3.5 stroke-[2.5]" />
+            <CloseRoundedIcon className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Modal Form - Colorful, Compact and Legible Layout */}
-        <form onSubmit={handleSubmit} className="p-2.5 sm:p-3 space-y-1.5 text-xs sm:text-sm overflow-y-auto">
-          {/* Top Info Row: মেমো নং (১ থেকে শুরু) ও তারিখ */}
-          <div className="grid grid-cols-2 gap-1.5">
+        {/* Modal Form - Material 3 Layout */}
+        <form onSubmit={handleSubmit} className="p-3 sm:p-3.5 space-y-2 text-xs sm:text-sm overflow-y-auto">
+          {/* Top Info Row: মেমো নং ও তারিখ */}
+          <div className="grid grid-cols-2 gap-2">
             {/* Memo Number Starting from 1 */}
             <div 
               id="memo-number-input-card"
-              className="bg-indigo-50/90 dark:bg-indigo-950/40 px-2.5 py-1 rounded-lg border-2 border-indigo-200 dark:border-indigo-800 flex items-center justify-between"
+              className="bg-indigo-50/90 dark:bg-indigo-950/40 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 flex items-center justify-between shadow-2xs"
             >
               <div className="flex items-center gap-1 min-w-0">
-                <Hash className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0 stroke-[2.5]" />
-                <span className="text-xs font-black text-indigo-950 dark:text-indigo-200">মেমো নং:</span>
+                <TagRoundedIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                <span className="text-xs font-bold text-indigo-950 dark:text-indigo-200">মেমো নং:</span>
               </div>
               <input
                 id="input-custom-memo-number"
@@ -400,7 +408,7 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
                 value={memoNumStr}
                 onChange={(e) => setMemoNumStr(convertEnToBnDigits(e.target.value, false))}
                 placeholder="১"
-                className="w-14 text-center font-black font-mono text-xs bg-white dark:bg-slate-900 border border-indigo-400 dark:border-indigo-700 rounded py-0.5 px-1 text-indigo-950 dark:text-white outline-none focus:border-indigo-600 shadow-2xs"
+                className="w-14 text-center font-bold font-mono text-xs bg-white dark:bg-slate-900 border border-indigo-400 dark:border-indigo-700 rounded-lg py-1 px-1 text-indigo-950 dark:text-white outline-none focus:border-indigo-600 shadow-2xs"
                 title="মেমো নম্বর (১ থেকে শুরু, প্রয়োজনে পরিবর্তন করতে পারেন)"
               />
             </div>
@@ -408,11 +416,11 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
             {/* Date Selector */}
             <div 
               id="memo-top-date-section"
-              className="bg-sky-50/90 dark:bg-sky-950/40 px-2.5 py-1 rounded-lg border-2 border-sky-200 dark:border-sky-800/60 flex items-center justify-between"
+              className="bg-sky-50/90 dark:bg-sky-950/40 px-3 py-1.5 rounded-xl border border-sky-200 dark:border-sky-800/60 flex items-center justify-between shadow-2xs"
             >
               <div className="flex items-center gap-1 min-w-0">
-                <CalendarTodayIcon className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
-                <span className="text-[11px] font-extrabold text-sky-950 dark:text-sky-100 truncate">
+                <CalendarTodayRoundedIcon className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
+                <span className="text-[11px] font-bold text-sky-950 dark:text-sky-100 truncate">
                   {dayName ? `${dayName}, ` : ''}{formattedSelectedDate}
                 </span>
               </div>
@@ -421,7 +429,7 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="text-[11px] font-bold border border-sky-400 dark:border-sky-700 rounded px-1.5 py-0.5 bg-white dark:bg-slate-900 text-sky-950 dark:text-sky-100 outline-none focus:border-sky-500 shadow-2xs w-20"
+                className="text-[11px] font-bold border border-sky-400 dark:border-sky-700 rounded-lg px-1.5 py-1 bg-white dark:bg-slate-900 text-sky-950 dark:text-sky-100 outline-none focus:border-sky-500 shadow-2xs w-20"
               />
             </div>
           </div>
@@ -544,9 +552,9 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
                   )}
                 </div>
 
-                <div className="grid grid-cols-12 gap-1.5 items-center">
-                  <div className="col-span-4">
-                    <div className="flex items-center gap-1 bg-white dark:bg-stone-900 rounded-lg border-2 border-rose-300 dark:border-rose-700 px-1.5 py-0.5 sm:py-1 focus-within:border-rose-500 shadow-2xs">
+                <div className="flex items-center justify-between gap-1.5 pt-0.5">
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                    <div className="flex-1 min-w-[70px] max-w-[120px] flex items-center gap-1 bg-white dark:bg-stone-900 rounded-lg border-2 border-rose-300 dark:border-rose-700 px-1.5 py-0.5 sm:py-1 focus-within:border-rose-500 shadow-2xs">
                       <input
                         id="input-memo-red-count"
                         type="text"
@@ -555,18 +563,16 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
                         placeholder="পিস"
                         value={redCountStr}
                         onChange={(e) => {
-                          const bn = convertEnToBnDigits(e.target.value, false);
-                          setRedCountStr(bn);
-                          handlePiecesChange(actualRedIdx, parseBengaliToNumber(bn));
+                          const formatted = formatTypingNumber(e.target.value, false, useBengali);
+                          setRedCountStr(formatted);
+                          handlePiecesChange(actualRedIdx, parseBengaliToNumber(formatted));
                         }}
                         className="w-full text-center font-black text-xs sm:text-sm bg-transparent text-stone-950 dark:text-stone-50 outline-none"
                       />
                       <span className="text-[11px] text-rose-700 dark:text-rose-400 shrink-0 font-extrabold">টি</span>
                     </div>
-                  </div>
 
-                  <div className="col-span-4">
-                    <div className="flex items-center gap-1 bg-white dark:bg-stone-900 rounded-lg border-2 border-rose-300 dark:border-rose-700 px-1.5 py-0.5 sm:py-1 focus-within:border-rose-500 shadow-2xs">
+                    <div className="flex-1 min-w-[60px] max-w-[95px] flex items-center gap-1 bg-white dark:bg-stone-900 rounded-lg border-2 border-rose-300 dark:border-rose-700 px-1.5 py-0.5 sm:py-1 focus-within:border-rose-500 shadow-2xs">
                       <span className="text-xs font-black text-rose-700 dark:text-rose-400 shrink-0">৳</span>
                       <input
                         id="input-memo-red-rate"
@@ -576,17 +582,17 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
                         placeholder="দর"
                         value={redRateStr}
                         onChange={(e) => {
-                          const bn = convertEnToBnDigits(e.target.value, true);
-                          setRedRateStr(bn);
-                          handlePieceRateChange(actualRedIdx, parseBengaliToNumber(bn));
+                          const formatted = formatTypingNumber(e.target.value, true, useBengali);
+                          setRedRateStr(formatted);
+                          handlePieceRateChange(actualRedIdx, parseBengaliToNumber(formatted));
                         }}
                         className="w-full text-center font-black text-xs sm:text-sm bg-transparent text-stone-950 dark:text-stone-50 outline-none"
                       />
                     </div>
                   </div>
 
-                  <div className="col-span-4 text-right">
-                    <div className="text-xs sm:text-sm font-black text-rose-950 dark:text-rose-200 whitespace-nowrap">
+                  <div className="shrink-0 text-right">
+                    <div className="px-2 py-0.5 sm:py-1 bg-rose-200/90 dark:bg-rose-900/60 border border-rose-300 dark:border-rose-700 rounded-lg font-black text-xs sm:text-sm text-rose-950 dark:text-rose-100 tabular-nums shadow-2xs whitespace-nowrap">
                       = {toBnCurrency(redItem.totalAmount, useBengali)}
                     </div>
                   </div>
@@ -629,9 +635,9 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
                   )}
                 </div>
 
-                <div className="grid grid-cols-12 gap-1.5 items-center">
-                  <div className="col-span-4">
-                    <div className="flex items-center gap-1 bg-white dark:bg-stone-900 rounded-lg border-2 border-cyan-400 dark:border-cyan-700 px-1.5 py-0.5 sm:py-1 focus-within:border-cyan-600 shadow-2xs">
+                <div className="flex items-center justify-between gap-1.5 pt-0.5">
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                    <div className="flex-1 min-w-[70px] max-w-[120px] flex items-center gap-1 bg-white dark:bg-stone-900 rounded-lg border-2 border-cyan-400 dark:border-cyan-700 px-1.5 py-0.5 sm:py-1 focus-within:border-cyan-600 shadow-2xs">
                       <input
                         id="input-memo-white-count"
                         type="text"
@@ -640,18 +646,16 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
                         placeholder="পিস"
                         value={whiteCountStr}
                         onChange={(e) => {
-                          const bn = convertEnToBnDigits(e.target.value, false);
-                          setWhiteCountStr(bn);
-                          handlePiecesChange(actualWhiteIdx, parseBengaliToNumber(bn));
+                          const formatted = formatTypingNumber(e.target.value, false, useBengali);
+                          setWhiteCountStr(formatted);
+                          handlePiecesChange(actualWhiteIdx, parseBengaliToNumber(formatted));
                         }}
                         className="w-full text-center font-black text-xs sm:text-sm bg-transparent text-stone-950 dark:text-stone-50 outline-none"
                       />
                       <span className="text-[11px] text-cyan-700 dark:text-cyan-400 shrink-0 font-extrabold">টি</span>
                     </div>
-                  </div>
 
-                  <div className="col-span-4">
-                    <div className="flex items-center gap-1 bg-white dark:bg-stone-900 rounded-lg border-2 border-cyan-400 dark:border-cyan-700 px-1.5 py-0.5 sm:py-1 focus-within:border-cyan-600 shadow-2xs">
+                    <div className="flex-1 min-w-[60px] max-w-[95px] flex items-center gap-1 bg-white dark:bg-stone-900 rounded-lg border-2 border-cyan-400 dark:border-cyan-700 px-1.5 py-0.5 sm:py-1 focus-within:border-cyan-600 shadow-2xs">
                       <span className="text-xs font-black text-cyan-700 dark:text-cyan-400 shrink-0">৳</span>
                       <input
                         id="input-memo-white-rate"
@@ -661,17 +665,17 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
                         placeholder="দর"
                         value={whiteRateStr}
                         onChange={(e) => {
-                          const bn = convertEnToBnDigits(e.target.value, true);
-                          setWhiteRateStr(bn);
-                          handlePieceRateChange(actualWhiteIdx, parseBengaliToNumber(bn));
+                          const formatted = formatTypingNumber(e.target.value, true, useBengali);
+                          setWhiteRateStr(formatted);
+                          handlePieceRateChange(actualWhiteIdx, parseBengaliToNumber(formatted));
                         }}
                         className="w-full text-center font-black text-xs sm:text-sm bg-transparent text-stone-950 dark:text-stone-50 outline-none"
                       />
                     </div>
                   </div>
 
-                  <div className="col-span-4 text-right">
-                    <div className="text-xs sm:text-sm font-black text-cyan-950 dark:text-cyan-200 whitespace-nowrap">
+                  <div className="shrink-0 text-right">
+                    <div className="px-2 py-0.5 sm:py-1 bg-cyan-200/90 dark:bg-cyan-900/60 border border-cyan-400 dark:border-cyan-700 rounded-lg font-black text-xs sm:text-sm text-cyan-950 dark:text-cyan-100 tabular-nums shadow-2xs whitespace-nowrap">
                       = {toBnCurrency(whiteItem.totalAmount, useBengali)}
                     </div>
                   </div>
@@ -687,14 +691,15 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
             return (
               <div 
                 key={extraItem.id} 
-                className="p-2 bg-purple-50/90 dark:bg-purple-950/30 rounded-xl border-2 border-purple-300 dark:border-purple-800 space-y-1 shadow-2xs"
+                className="p-2 bg-purple-50/90 dark:bg-purple-950/30 rounded-xl border-2 border-purple-300 dark:border-purple-800 space-y-1.5 shadow-2xs"
               >
-                <div className="grid grid-cols-12 gap-1.5 items-center">
-                  <div className="col-span-3 flex items-center gap-1">
+                {/* Header row: Egg selection + Total amount + Delete button */}
+                <div className="flex items-center justify-between gap-1.5">
+                  <div className="flex-1 min-w-0 max-w-[150px]">
                     <select
                       value={extraItem.eggType}
                       onChange={(e) => handleEggTypeChange(actualIdx, e.target.value as EggType)}
-                      className="w-full text-xs font-bold border-2 border-purple-300 dark:border-purple-700 rounded-lg p-0.5 bg-white dark:bg-stone-800 text-purple-950 dark:text-purple-100"
+                      className="w-full text-xs font-bold border-2 border-purple-300 dark:border-purple-700 rounded-lg px-1.5 py-0.5 bg-white dark:bg-stone-800 text-purple-950 dark:text-purple-100 outline-none"
                     >
                       <option value="হাঁসের ডিম">হাঁসের ডিম</option>
                       <option value="দেশি ডিম">দেশি ডিম</option>
@@ -702,60 +707,66 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
                       <option value="সাদা ডিম">সাদা ডিম</option>
                     </select>
                   </div>
-                  <div className="col-span-3">
+                  <div className="flex items-center justify-end gap-1.5 shrink-0">
+                    <span className="px-2 py-0.5 bg-purple-200/90 dark:bg-purple-900/60 border border-purple-300 dark:border-purple-700 rounded-lg font-black text-xs sm:text-sm text-purple-950 dark:text-purple-100 whitespace-nowrap tabular-nums shadow-2xs">
+                      = {toBnCurrency(extraItem.totalAmount, useBengali)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeItem(actualIdx)}
+                      className="text-stone-400 hover:text-rose-500 p-0.5 rounded transition shrink-0"
+                      title="মুছে ফেলুন"
+                    >
+                      <DeleteOutlineRoundedIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Input row: Count, Rate */}
+                <div className="flex items-center gap-1.5">
+                  <div className="flex-1 min-w-[70px] flex items-center gap-1 bg-white dark:bg-stone-900 rounded-lg border-2 border-purple-300 dark:border-purple-700 px-1.5 py-0.5 sm:py-1 focus-within:border-purple-500 shadow-2xs">
                     <input
                       type="text"
                       inputMode="numeric"
                       autoComplete="off"
                       placeholder="পিস"
-                      value={extraItemInputs[extraItem.id]?.countStr ?? (extraItem.count > 0 ? convertEnToBnDigits(extraItem.count, false) : '')}
+                      value={extraItemInputs[extraItem.id]?.countStr ?? (extraItem.count > 0 ? formatTypingNumber(extraItem.count, false, useBengali) : '')}
                       onChange={(e) => {
-                        const bn = convertEnToBnDigits(e.target.value, false);
+                        const formatted = formatTypingNumber(e.target.value, false, useBengali);
                         setExtraItemInputs((prev) => ({
                           ...prev,
                           [extraItem.id]: {
-                            countStr: bn,
+                            countStr: formatted,
                             rateStr: prev[extraItem.id]?.rateStr ?? '',
                           },
                         }));
-                        handlePiecesChange(actualIdx, parseBengaliToNumber(bn));
+                        handlePiecesChange(actualIdx, parseBengaliToNumber(formatted));
                       }}
-                      className="w-full text-xs sm:text-sm font-black border-2 border-purple-300 dark:border-purple-700 rounded-lg py-0.5 px-1 bg-white dark:bg-stone-800 text-stone-950 dark:text-stone-100 text-center"
+                      className="w-full text-center font-black text-xs sm:text-sm bg-transparent text-stone-950 dark:text-stone-50 outline-none"
                     />
+                    <span className="text-[11px] text-purple-700 dark:text-purple-400 shrink-0 font-extrabold">টি</span>
                   </div>
-                  <div className="col-span-3">
+                  <div className="flex-1 min-w-[60px] flex items-center gap-1 bg-white dark:bg-stone-900 rounded-lg border-2 border-purple-300 dark:border-purple-700 px-1.5 py-0.5 sm:py-1 focus-within:border-purple-500 shadow-2xs">
+                    <span className="text-xs font-black text-purple-700 dark:text-purple-400 shrink-0">৳</span>
                     <input
                       type="text"
                       inputMode="decimal"
                       autoComplete="off"
                       placeholder="দর"
-                      value={extraItemInputs[extraItem.id]?.rateStr ?? (pieceRate > 0 ? convertEnToBnDigits(pieceRate, true) : '')}
+                      value={extraItemInputs[extraItem.id]?.rateStr ?? (pieceRate > 0 ? formatTypingNumber(pieceRate, true, useBengali) : '')}
                       onChange={(e) => {
-                        const bn = convertEnToBnDigits(e.target.value, true);
+                        const formatted = formatTypingNumber(e.target.value, true, useBengali);
                         setExtraItemInputs((prev) => ({
                           ...prev,
                           [extraItem.id]: {
                             countStr: prev[extraItem.id]?.countStr ?? '',
-                            rateStr: bn,
+                            rateStr: formatted,
                           },
                         }));
-                        handlePieceRateChange(actualIdx, parseBengaliToNumber(bn));
+                        handlePieceRateChange(actualIdx, parseBengaliToNumber(formatted));
                       }}
-                      className="w-full text-xs sm:text-sm font-black border-2 border-purple-300 dark:border-purple-700 rounded-lg py-0.5 px-1 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-center"
+                      className="w-full text-center font-black text-xs sm:text-sm bg-transparent text-stone-950 dark:text-stone-50 outline-none"
                     />
-                  </div>
-                  <div className="col-span-3 flex items-center justify-end gap-1">
-                    <span className="font-black text-xs sm:text-sm text-purple-950 dark:text-purple-100 truncate">
-                      {toBnCurrency(extraItem.totalAmount, useBengali)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeItem(actualIdx)}
-                      className="text-stone-400 hover:text-rose-500 p-0.5 rounded"
-                      title="মুছে ফেলুন"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
                   </div>
                 </div>
               </div>
@@ -768,9 +779,9 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
               type="button"
               id="btn-add-egg-item"
               onClick={addItem}
-              className="text-[11px] font-bold text-purple-700 dark:text-purple-300 hover:text-purple-900 bg-purple-50 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-800 px-2 py-0.5 rounded flex items-center gap-1 transition"
+              className="text-[11px] font-bold text-purple-700 dark:text-purple-300 hover:text-purple-900 bg-purple-50 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-800 px-2 py-0.5 rounded-lg flex items-center gap-1 transition shadow-2xs active:scale-95"
             >
-              <Plus className="w-3 h-3" />
+              <AddRoundedIcon className="w-3.5 h-3.5" />
               <span>+ অন্যান্য ডিম যোগ</span>
             </button>
           </div>
@@ -778,14 +789,14 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
           {/* 6. লাইন ৩: পূর্বের বকেয়া - Compact */}
           <div 
             id="line-box-previous-due"
-            className="bg-rose-50/90 dark:bg-rose-950/30 border-2 border-rose-300 dark:border-rose-900/70 rounded-xl px-2.5 py-1 flex items-center justify-between gap-1 shadow-2xs"
+            className="bg-rose-50/90 dark:bg-rose-950/30 border border-rose-300 dark:border-rose-900/70 rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-1 shadow-2xs min-w-0"
           >
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-xs text-rose-950 dark:text-rose-200">পূর্বের বকেয়া:</span>
-              <span className="text-[10px] bg-rose-200 dark:bg-rose-900 text-rose-800 dark:text-rose-200 px-1 py-0.2 rounded font-bold">Auto যোগ</span>
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <span className="font-bold text-xs text-rose-950 dark:text-rose-200 truncate">পূর্বের বকেয়া:</span>
+              <span className="text-[10px] bg-rose-200 dark:bg-rose-900 text-rose-800 dark:text-rose-200 px-1.5 py-0.2 rounded font-bold shrink-0">Auto যোগ</span>
             </div>
 
-            <div className="relative">
+            <div className="relative shrink-0">
               <input
                 id="input-memo-previous-due"
                 type="text"
@@ -793,110 +804,150 @@ export const NewMemoModal: React.FC<NewMemoModalProps> = ({
                 autoComplete="off"
                 value={previousDueStr}
                 onChange={(e) => {
-                  const bn = convertEnToBnDigits(e.target.value, false);
-                  setPreviousDueStr(bn);
-                  setPreviousDue(parseBengaliToNumber(bn));
+                  const formatted = formatTypingNumber(e.target.value, false, useBengali);
+                  setPreviousDueStr(formatted);
+                  setPreviousDue(parseBengaliToNumber(formatted));
                 }}
                 placeholder="০"
-                className="w-24 text-xs sm:text-sm font-black text-right border-2 border-rose-400 dark:border-rose-800 rounded-lg py-0.5 sm:py-1 px-1.5 pr-4 bg-white dark:bg-stone-900 text-rose-700 dark:text-rose-300 focus:border-rose-600 outline-none shadow-2xs"
+                className="w-24 text-xs sm:text-sm font-bold text-right border border-rose-400 dark:border-rose-800 rounded-lg py-1 px-1.5 pr-4 bg-white dark:bg-stone-900 text-rose-700 dark:text-rose-300 focus:border-rose-600 outline-none shadow-2xs"
               />
-              <span className="absolute right-1.5 top-1 sm:top-1.5 text-[11px] font-black text-rose-500 pointer-events-none">৳</span>
+              <span className="absolute right-1.5 top-1.5 text-[11px] font-bold text-rose-500 pointer-events-none">৳</span>
             </div>
           </div>
 
           {/* 7. লাইন ৪: সর্বমোট দাবি - Compact */}
           <div 
             id="line-box-total-demand"
-            className="bg-purple-50/90 dark:bg-purple-950/40 border-2 border-purple-300 dark:border-purple-800 rounded-xl px-2.5 py-1 flex items-center justify-between gap-1 shadow-2xs"
+            className="bg-purple-50/90 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-800 rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-1 shadow-2xs min-w-0"
           >
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-xs sm:text-sm text-purple-950 dark:text-purple-100">সর্বমোট দাবি:</span>
-              <span className="text-[10px] bg-purple-200 dark:bg-purple-900 text-purple-900 dark:text-purple-200 px-1 py-0.2 rounded font-bold">বিল + বাকি</span>
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <span className="font-bold text-xs sm:text-sm text-purple-950 dark:text-purple-100 truncate">সর্বমোট দাবি:</span>
+              <span className="text-[10px] bg-purple-200 dark:bg-purple-900 text-purple-900 dark:text-purple-200 px-1.5 py-0.2 rounded font-bold shrink-0">বিল + বাকি</span>
             </div>
 
             <div className="text-right shrink-0">
-              <span className="text-xs sm:text-sm font-black text-purple-950 dark:text-purple-200">
+              <span className="text-xs sm:text-sm font-bold text-purple-950 dark:text-purple-200 tabular-nums whitespace-nowrap pl-1">
                 {toBnCurrency(totalDemand, useBengali)}
               </span>
             </div>
           </div>
 
-          {/* 8. লাইন ৫: নগদ জমা - Compact */}
+          {/* 8. লাইন ৫: নগদ জমা - Compact with Quick Action Buttons */}
           <div 
             id="line-box-cash-paid"
-            className="bg-emerald-50/90 dark:bg-emerald-950/30 border-2 border-emerald-400 dark:border-emerald-800/80 rounded-xl px-2.5 py-1 flex items-center justify-between gap-1 shadow-2xs"
+            className="bg-emerald-50/90 dark:bg-emerald-950/30 border border-emerald-400 dark:border-emerald-800/80 rounded-xl p-2 space-y-1 shadow-2xs min-w-0"
           >
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-xs sm:text-sm text-emerald-950 dark:text-emerald-200">নগদ জমা:</span>
-              <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">আজকের টাকা</span>
+            <div className="flex items-center justify-between gap-1 min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                <span className="font-bold text-xs sm:text-sm text-emerald-950 dark:text-emerald-200 truncate">নগদ জমা:</span>
+                <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold shrink-0">আজকের টাকা</span>
+              </div>
+
+              <div className="relative shrink-0">
+                <input
+                  id="input-cash-paid"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={cashPaidStr}
+                  onChange={(e) => {
+                    const formatted = formatTypingNumber(e.target.value, false, useBengali);
+                    setCashPaidStr(formatted);
+                    setCashPaid(parseBengaliToNumber(formatted));
+                  }}
+                  placeholder="০"
+                  className="w-24 text-xs sm:text-sm font-bold text-right border border-emerald-500 dark:border-emerald-700 rounded-lg py-0.5 sm:py-1 px-1.5 pr-4 bg-white dark:bg-stone-900 text-emerald-800 dark:text-emerald-200 focus:ring-1 focus:ring-emerald-500 outline-none shadow-2xs"
+                />
+                <span className="absolute right-1.5 top-1 sm:top-1.5 text-[11px] font-bold text-emerald-500 pointer-events-none">৳</span>
+              </div>
             </div>
 
-            <div className="relative">
-              <input
-                id="input-cash-paid"
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                value={cashPaidStr}
-                onChange={(e) => {
-                  const bn = convertEnToBnDigits(e.target.value, false);
-                  setCashPaidStr(bn);
-                  setCashPaid(parseBengaliToNumber(bn));
+            {/* Quick shortcuts for rapid entry without box overflow */}
+            <div className="grid grid-cols-3 gap-1 pt-1 text-[10.5px]">
+              <button
+                type="button"
+                onClick={() => {
+                  const val = totalDemand;
+                  setCashPaid(val);
+                  setCashPaidStr(toBengaliNumber(val, true));
                 }}
-                placeholder="০"
-                className="w-24 text-xs sm:text-sm font-black text-right border-2 border-emerald-500 dark:border-emerald-700 rounded-lg py-0.5 sm:py-1 px-1.5 pr-4 bg-white dark:bg-stone-900 text-emerald-800 dark:text-emerald-200 focus:border-emerald-600 outline-none shadow-2xs"
-              />
-              <span className="absolute right-1.5 top-1 sm:top-1.5 text-[11px] font-black text-emerald-500 pointer-events-none">৳</span>
+                className="py-1 px-1 rounded-lg bg-emerald-200 dark:bg-emerald-900 text-emerald-950 dark:text-emerald-100 font-black hover:bg-emerald-300 transition active:scale-95 text-center truncate shadow-2xs"
+                title={`সম্পূর্ণ পরিশোধ (${toBengaliNumber(totalDemand, useBengali)}৳)`}
+              >
+                সম্পূর্ণ ({toBengaliNumber(totalDemand, useBengali)}৳)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const val = totalBill;
+                  setCashPaid(val);
+                  setCashPaidStr(toBengaliNumber(val, true));
+                }}
+                className="py-1 px-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-200 font-bold hover:bg-emerald-200 transition active:scale-95 text-center truncate shadow-2xs"
+                title={`আজকের বিল (${toBengaliNumber(totalBill, useBengali)}৳)`}
+              >
+                বিল ({toBengaliNumber(totalBill, useBengali)}৳)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCashPaid(0);
+                  setCashPaidStr('');
+                }}
+                className="py-1 px-1 rounded-lg bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-bold hover:bg-stone-300 transition active:scale-95 text-center truncate shadow-2xs"
+              >
+                পুরো বাকি
+              </button>
             </div>
           </div>
 
           {/* 9. লাইন ৬: অবশিষ্ট বাকি - Compact */}
           <div 
             id="line-box-remaining-due"
-            className={`rounded-xl px-2.5 py-1 flex items-center justify-between gap-1 border-2 shadow-2xs ${
+            className={`rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-1 border shadow-2xs min-w-0 ${
               remainingDue > 0
                 ? 'bg-rose-100 dark:bg-rose-950/60 border-rose-400 dark:border-rose-700 text-rose-950 dark:text-rose-100'
                 : 'bg-emerald-100 dark:bg-emerald-950/60 border-emerald-400 dark:border-emerald-700 text-emerald-950 dark:text-emerald-100'
             }`}
           >
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-xs sm:text-sm">অবশিষ্ট বাকি:</span>
-              <span className="text-[10px] bg-rose-200/90 dark:bg-rose-900/90 text-rose-900 dark:text-rose-200 px-1 py-0.2 rounded font-bold">Auto</span>
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <span className="font-bold text-xs sm:text-sm truncate">অবশিষ্ট বাকি:</span>
+              <span className="text-[10px] bg-rose-200/90 dark:bg-rose-900/90 text-rose-900 dark:text-rose-200 px-1.5 py-0.2 rounded font-bold shrink-0">Auto</span>
             </div>
 
             <div className="text-right shrink-0">
-              <span className="text-xs sm:text-sm font-black">
+              <span className="text-xs sm:text-sm font-bold tabular-nums whitespace-nowrap pl-1">
                 {remainingDue > 0 ? toBnCurrency(remainingDue, useBengali) : 'পরিশোধিত (০ ৳)'}
               </span>
             </div>
           </div>
 
           {/* 10. Note & Action Buttons */}
-          <div className="pt-0.5 space-y-1">
+          <div className="pt-0.5 space-y-1.5">
             <input
               id="input-memo-note"
               type="text"
               placeholder="মন্তব্য / নোট (ঐচ্ছিক)"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full text-xs font-bold border border-stone-200 dark:border-stone-700 rounded-lg px-2.5 py-1 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder:text-stone-400 outline-none focus:border-indigo-500"
+              className="w-full text-xs font-semibold border border-stone-300 dark:border-stone-700 rounded-xl px-3 py-1.5 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder:text-stone-400 outline-none focus:border-blue-500"
             />
             
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3.5 py-2 bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 rounded-xl font-bold text-xs hover:bg-stone-200 dark:hover:bg-stone-700 transition active:scale-95"
+                className="soft-btn text-stone-700 dark:text-stone-300 rounded-xl font-bold text-xs px-3.5 py-2.5 transition active:scale-95"
               >
                 বাতিল
               </button>
               <button
                 id="submit-memo-btn"
                 type="submit"
-                className="flex-1 py-2 px-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 hover:from-indigo-700 hover:to-emerald-700 text-white rounded-xl font-black text-xs sm:text-sm shadow-md hover:shadow-lg transition-all active:scale-98 flex items-center justify-center gap-1"
+                className="flex-1 py-2.5 px-3 soft-btn-primary rounded-xl font-black text-xs sm:text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
               >
-                <span>💾 মেমো সেভ ও ভাউচার তৈরি করুন</span>
-                <ArrowRight className="w-3.5 h-3.5 stroke-[3]" />
+                <span>মেমো সেভ ও ভাউচার তৈরি করুন</span>
+                <ArrowForwardRoundedIcon className="w-4 h-4" />
               </button>
             </div>
           </div>

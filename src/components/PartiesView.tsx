@@ -1,20 +1,33 @@
 import React, { useState } from 'react';
 import { Memo, Party } from '../types';
-import { toBengaliNumber, toBnCurrency, formatDisplayMemoNumber, compareMemosDesc, comparePartiesByRecentActivity } from '../utils/bengaliUtils';
+import { 
+  toBengaliNumber, 
+  toBnCurrency, 
+  formatDisplayMemoNumber, 
+  compareMemosDesc, 
+  comparePartiesByRecentActivity,
+  formatTypingNumber,
+  parseBengaliToNumber
+} from '../utils/bengaliUtils';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { getPartyColorTheme } from '../utils/partyColors';
-import { 
-  Users, 
-  Search, 
-  Phone, 
-  ChevronDown, 
-  ChevronUp, 
-  Plus, 
-  Trash2, 
-  DollarSign, 
-  FileText,
-  ArrowUpRight
-} from 'lucide-react';
+import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import PhoneRoundedIcon from '@mui/icons-material/PhoneRounded';
+import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
+import KeyboardArrowUpRoundedIcon from '@mui/icons-material/KeyboardArrowUpRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded';
+import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
+import ArrowOutwardRoundedIcon from '@mui/icons-material/ArrowOutwardRounded';
+import PersonAddRoundedIcon from '@mui/icons-material/PersonAddRounded';
+import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
+import { hapticCancel, hapticDelete, hapticSuccess } from '../utils/haptics';
+import { AnimatedSearchBox } from './AnimatedSearchBox';
 
 interface PartiesViewProps {
   parties: Party[];
@@ -50,6 +63,7 @@ export const PartiesView: React.FC<PartiesViewProps> = ({
   const [newType, setNewType] = useState<Party['type']>('পাইকারি');
   const [newAddress, setNewAddress] = useState('');
   const [newInitialDue, setNewInitialDue] = useState<number>(0);
+  const [newInitialDueStr, setNewInitialDueStr] = useState<string>('');
 
   const totalDueAmount = React.useMemo(() => {
     return parties.reduce((sum, p) => sum + (p.currentDue || 0), 0);
@@ -77,6 +91,7 @@ export const PartiesView: React.FC<PartiesViewProps> = ({
     e.preventDefault();
     if (!newName.trim()) return;
 
+    hapticSuccess();
     onAddParty({
       name: newName.trim(),
       phone: newPhone.trim(),
@@ -90,57 +105,38 @@ export const PartiesView: React.FC<PartiesViewProps> = ({
     setNewPhone('');
     setNewAddress('');
     setNewInitialDue(0);
+    setNewInitialDueStr('');
     setShowAddPartyModal(false);
   };
 
   return (
-    <div id="parties-view-container" className="space-y-2 pb-16">
-      {/* 1. Top Summary Banner - Compact */}
-      <div 
-        id="parties-due-summary-card"
-        className="relative overflow-hidden bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white border border-blue-400/40 rounded-xl p-2.5 shadow-xs"
-      >
-        <div className="flex items-center justify-between gap-2 relative z-10">
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center text-cyan-200 shrink-0">
-                <Users className="w-3 h-3" />
-              </span>
-              <span className="text-xs font-bold text-blue-100">সর্বমোট পাওনা বাকি:</span>
-              <strong className="text-sm sm:text-base font-black text-white tracking-tight tabular-nums">
-                {toBnCurrency(totalDueAmount, useBengali)}
-              </strong>
-            </div>
-            <p className="text-[11px] text-blue-100 font-medium truncate mt-0.5">
-              মোট {toBengaliNumber(parties.length, useBengali)} জনের মধ্যে <span className="text-white font-bold bg-white/20 px-1 py-0.2 rounded">{toBengaliNumber(partiesWithDue.length, useBengali)} জনের কাছে</span> বাকি
-            </p>
-          </div>
+    <div id="parties-view-container" className="space-y-2.5 pb-16">
 
-          <button
-            onClick={() => setShowAddPartyModal(true)}
-            className="text-xs font-black bg-white text-blue-950 hover:bg-blue-50 px-2.5 py-1.5 rounded-lg shadow-xs transition active:scale-95 flex items-center gap-1 shrink-0"
-          >
-            <Plus className="w-3.5 h-3.5 stroke-[3] text-blue-700" />
-            <span>+ নতুন পার্টি</span>
-          </button>
+      {/* Action Bar with AnimatedSearchBox & "+ নতুন পার্টি" Button */}
+      <div className="flex items-center gap-1.5">
+        <div className="flex-1 min-w-0">
+          <AnimatedSearchBox
+            id="search-party-box"
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="পার্টির নাম বা মোবাইল নম্বর দিয়ে খুঁজুন..."
+            buttonText="খুঁজুন"
+            compact={true}
+            resultsCount={filteredParties.length}
+          />
         </div>
+        <button
+          type="button"
+          onClick={() => setShowAddPartyModal(true)}
+          className="text-xs font-black soft-btn-primary px-3.5 py-2.5 rounded-xl transition-all active:scale-95 flex items-center gap-1 shrink-0"
+        >
+          <AddRoundedIcon className="w-4 h-4" />
+          <span>নতুন পার্টি</span>
+        </button>
       </div>
 
-      {/* 2. Search Bar - Compact */}
-      <div className="relative">
-        <Search className="w-4 h-4 text-blue-600 dark:text-blue-400 absolute left-3 top-2.5" />
-        <input
-          id="search-party-input"
-          type="text"
-          placeholder="পার্টির নাম বা মোবাইল নম্বর দিয়ে খুঁজুন..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-9 pr-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 shadow-2xs placeholder:text-slate-400"
-        />
-      </div>
-
-      {/* 3. Parties List */}
-      <div className="space-y-2.5">
+      {/* 3. Parties List - Responsive 1 column on phones, 2 columns on tablets */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
         {filteredParties.map((party) => {
           const isExpanded = expandedPartyId === party.id;
           const hasDue = party.currentDue > 0;
@@ -157,101 +153,111 @@ export const PartiesView: React.FC<PartiesViewProps> = ({
           return (
             <div
               key={party.id}
-              className={`bg-white dark:bg-slate-900 rounded-xl border-2 border-l-[5px] ${theme.borderLeft} ${theme.border} shadow-2xs hover:shadow-md ${theme.hoverBorder} overflow-hidden transition-all`}
+              className={`glass-card rounded-2xl p-3 border shadow-xs hover:shadow-md transition-all space-y-2.5 border-l-4 ${theme.borderLeft} ${theme.border} relative overflow-hidden`}
             >
-              {/* Main Party Row - Sleek, Slim & Attractive */}
-              <div className="p-2 sm:p-2.5 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2.5 min-w-0">
+              <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600 pointer-events-none" />
+              {/* Top Row: Avatar & Party Name, Type Badge, Due Badge */}
+              <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                <div className="flex items-center gap-1.5 min-w-0">
                   <div 
                     onClick={() => onOpenPartyDetails(party)}
-                    className={`w-9 h-9 rounded-xl bg-gradient-to-br ${theme.avatarGradient} text-white flex items-center justify-center font-black text-xs sm:text-sm shadow-2xs cursor-pointer hover:scale-105 active:scale-95 transition-transform shrink-0`}
+                    className={`w-7 h-7 rounded-lg bg-gradient-to-br ${theme.avatarGradient} text-white flex items-center justify-center font-black text-xs shadow-xs cursor-pointer hover:scale-105 active:scale-95 transition-transform shrink-0`}
                     title="এই পার্টির সমস্ত মেমো ও খতিয়ান দেখুন"
                   >
                     {party.name.trim().charAt(0)}
                   </div>
-                  <div className="space-y-0.5 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={() => onOpenPartyDetails(party)}
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border ${theme.nameBadge} hover:scale-[1.02] active:scale-95 transition-all text-left shadow-2xs group`}
-                        title="ক্লিক করে এই পার্টির খতিয়ান ও হিসাব দেখুন"
-                      >
-                        <span className="font-black text-xs sm:text-sm leading-tight">
-                          {party.name}
-                        </span>
-                        <ArrowUpRight className="w-3 h-3 opacity-70 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                      </button>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold border shrink-0 ${typeBadgeStyle}`}>
-                        {party.type}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => onOpenPartyDetails(party)}
-                        className="text-[11px] text-blue-950 dark:text-blue-200 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 px-2 py-0.5 rounded-md font-bold flex items-center gap-1 transition shrink-0 shadow-2xs"
-                        title="খতিয়ান ও বিস্তারিত বিবরণ দেখুন"
-                      >
-                        <FileText className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                        <span>খতিয়ান ({toBengaliNumber(partyMemos.length, useBengali)})</span>
-                      </button>
-                      <button
-                        onClick={() => setExpandedPartyId(isExpanded ? null : party.id)}
-                        className="text-[11px] text-slate-800 dark:text-slate-200 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 px-1.5 py-0.5 rounded-md transition font-bold shrink-0"
-                      >
-                        <span>{isExpanded ? 'সংক্ষিপ্ত' : 'হিসাব'}</span>
-                        {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                      </button>
-                      <button
-                        title="পার্টি ডিলিট করুন"
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPartyToDelete(party);
-                        }}
-                        className="text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 p-1 rounded-md transition active:scale-95"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-xs flex-wrap">
-                      {party.phone && (
-                        <a
-                          href={`tel:${party.phone}`}
-                          className="text-slate-600 dark:text-slate-400 hover:text-blue-700 dark:hover:text-blue-400 flex items-center gap-1 font-semibold text-[11px]"
-                        >
-                          <Phone className="w-3 h-3 text-blue-600" />
-                          <span>{party.phone}</span>
-                        </a>
-                      )}
-
-                      {(() => {
-                        const totalEggs = partyMemos.reduce((sum, m) => sum + (m.totalEggs || 0), 0);
-                        if (totalEggs > 0) {
-                          return (
-                            <span className="font-bold text-indigo-950 dark:text-indigo-200 bg-indigo-50/90 dark:bg-indigo-950/60 px-2 py-0.2 rounded text-[10.5px] border border-indigo-200 dark:border-indigo-800">
-                              🥚 ক্রয়: {toBengaliNumber(totalEggs, useBengali)} পিস
-                            </span>
-                          );
-                        }
-                        return null;
-                      })()}
-                    </div>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onOpenPartyDetails(party)}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-xs font-bold transition-all text-left shadow-2xs hover:scale-[1.01] active:scale-95 ${theme.nameBadge}`}
+                    title="ক্লিক করে এই পার্টির খতিয়ান ও হিসাব দেখুন"
+                  >
+                    <span className="truncate max-w-[120px] sm:max-w-[160px]">{party.name}</span>
+                    <ArrowOutwardRoundedIcon className="w-2.5 h-2.5 opacity-60 shrink-0" />
+                  </button>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-md font-bold border shrink-0 ${typeBadgeStyle}`}>
+                    {party.type}
+                  </span>
                 </div>
 
-                {/* Due Badge - Slim & High Contrast */}
-                <div className="text-right shrink-0">
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block leading-tight">বর্তমান বাকি</span>
-                  <div
-                    className={`text-xs sm:text-sm font-black px-2.5 py-1 rounded-lg shadow-2xs mt-0.5 tabular-nums ${
-                      hasDue
-                        ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white'
-                        : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white'
-                    }`}
+                {/* Right side: Due Badge */}
+                <div className="flex items-center gap-1 ml-auto">
+                  <span className={`text-[10.5px] px-2 py-0.5 rounded-lg font-bold border whitespace-nowrap ${
+                    hasDue
+                      ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-700 text-rose-800 dark:text-rose-300'
+                      : 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300'
+                  }`}>
+                    {hasDue ? `বাকি: ${toBnCurrency(party.currentDue, useBengali)}` : '✓ পরিশোধ'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Middle Row: Phone and Total Egg Purchase */}
+              <div className="flex items-center justify-between text-xs font-medium px-2.5 py-1.5 rounded-xl border bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border-slate-200/60 dark:border-white/10">
+                <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300 truncate">
+                  {party.phone ? (
+                    <a href={`tel:${party.phone}`} className="hover:text-blue-600 flex items-center gap-1 font-semibold text-[11px]">
+                      <PhoneRoundedIcon style={{ fontSize: '13px' }} className="text-blue-600" />
+                      <span>{party.phone}</span>
+                    </a>
+                  ) : (
+                    <span className="text-slate-400 text-[11px]">মোবাইল নেই</span>
+                  )}
+                </div>
+                <span className="font-bold text-xs text-slate-900 dark:text-white shrink-0 ml-1.5">
+                  🥚 ক্রয়: {toBengaliNumber(partyMemos.reduce((sum, m) => sum + (m.totalEggs || 0), 0), useBengali)} পিস
+                </span>
+              </div>
+
+              {/* Bottom Row: Financials and Action Buttons */}
+              <div className="flex items-center justify-between gap-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-1 flex-wrap text-xs min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => onOpenPartyDetails(party)}
+                    className="text-[10.5px] bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-2 py-0.5 rounded font-bold flex items-center gap-1 transition shadow-2xs"
                   >
-                    {toBnCurrency(party.currentDue, useBengali)}
-                  </div>
+                    <ReceiptLongRoundedIcon style={{ fontSize: '12px' }} />
+                    <span>খতিয়ান ({toBengaliNumber(partyMemos.length, useBengali)})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedPartyId(isExpanded ? null : party.id)}
+                    className="text-[10.5px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded transition font-bold"
+                  >
+                    <span>{isExpanded ? 'সংক্ষিপ্ত' : 'বিস্তারিত'}</span>
+                  </button>
+                </div>
+
+                {/* Compact Action Icons */}
+                <div className="flex items-center gap-1 shrink-0 ml-auto" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    title="নতুন মেমো"
+                    onClick={() => onSelectPartyForSale(party)}
+                    className="w-7 h-7 rounded-lg border border-blue-200 dark:border-blue-800/80 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-100 active:scale-90 transition shadow-2xs cursor-pointer"
+                  >
+                    <AddRoundedIcon style={{ fontSize: '15px' }} />
+                  </button>
+                  {hasDue && (
+                    <button
+                      title="জমা নিন"
+                      onClick={() => onOpenPaymentModal(party)}
+                      className="w-7 h-7 rounded-lg border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center hover:bg-emerald-100 active:scale-90 transition shadow-2xs cursor-pointer"
+                    >
+                      <AccountBalanceWalletRoundedIcon style={{ fontSize: '15px' }} />
+                    </button>
+                  )}
+                  <button
+                    title="পার্টি মুছে ফেলুন"
+                    type="button"
+                    onClick={() => {
+                      hapticCancel();
+                      setPartyToDelete(party);
+                    }}
+                    className="w-7 h-7 rounded-lg border border-rose-200 dark:border-rose-800/80 bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center hover:bg-rose-100 active:scale-90 transition shadow-2xs cursor-pointer"
+                  >
+                    <DeleteOutlineRoundedIcon style={{ fontSize: '15px' }} />
+                  </button>
                 </div>
               </div>
 
@@ -288,31 +294,33 @@ export const PartiesView: React.FC<PartiesViewProps> = ({
                     })()}
                   </div>
 
-                  {/* Action buttons inside expanded row */}
-                  <div className="flex gap-2">
+                  {/* Action buttons inside expanded row - Sleek & Balanced */}
+                  <div className="flex gap-1.5">
                     <button
+                      type="button"
                       onClick={() => onSelectPartyForSale(party)}
-                      className="flex-1 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95"
+                      className="flex-1 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-95"
                     >
-                      <Plus className="w-4 h-4" />
+                      <AddRoundedIcon className="w-3.5 h-3.5" />
                       <span>নতুন মেমো</span>
                     </button>
                     {hasDue && (
                       <button
+                        type="button"
                         onClick={() => onOpenPaymentModal(party)}
-                        className="flex-1 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95"
+                        className="flex-1 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-95"
                       >
-                        <DollarSign className="w-4 h-4" />
+                        <AccountBalanceWalletRoundedIcon className="w-3.5 h-3.5" />
                         <span>জমা / আদায়</span>
                       </button>
                     )}
                     <button
                       type="button"
                       onClick={() => setPartyToDelete(party)}
-                      className="py-2 px-3 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/80 text-rose-600 dark:text-rose-300 font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1 border border-rose-200 dark:border-rose-800 transition active:scale-95"
+                      className="py-1.5 px-2.5 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/80 text-rose-600 dark:text-rose-300 font-bold rounded-lg text-xs flex items-center justify-center gap-1 border border-rose-200 dark:border-rose-800 transition active:scale-95"
                       title="এই পার্টিকে মুছে ফেলুন"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <DeleteOutlineRoundedIcon className="w-3.5 h-3.5" />
                       <span>মুছুন</span>
                     </button>
                   </div>
@@ -321,11 +329,11 @@ export const PartiesView: React.FC<PartiesViewProps> = ({
                   <button
                     type="button"
                     onClick={() => onOpenPartyDetails(party)}
-                    className="w-full py-2 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-950 dark:text-blue-200 border border-blue-200 dark:border-blue-800 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 shadow-2xs transition active:scale-95"
+                    className="w-full py-1.5 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-950 dark:text-blue-200 border border-blue-200 dark:border-blue-800 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-95"
                   >
-                    <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <ReceiptLongRoundedIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                     <span>খতিয়ান ও মেমো খাতা দেখুন ({toBengaliNumber(partyMemos.length, useBengali)} টি মেমো)</span>
-                    <ArrowUpRight className="w-4 h-4" />
+                    <ArrowOutwardRoundedIcon className="w-3.5 h-3.5" />
                   </button>
 
                   {/* Previous memos by this party */}
@@ -340,7 +348,7 @@ export const PartiesView: React.FC<PartiesViewProps> = ({
                         >
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-1.5">
-                              <FileText className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
+                              <ReceiptLongRoundedIcon className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
                               <span className="font-mono font-black text-stone-900 dark:text-stone-100">{formatDisplayMemoNumber(m.memoNumber, useBengali)}</span>
                               <span className="text-stone-500 dark:text-stone-400 text-xs">({m.formattedDate})</span>
                             </div>
@@ -443,43 +451,55 @@ export const PartiesView: React.FC<PartiesViewProps> = ({
         })}
       </div>
 
-      {/* Add Party Modal */}
+      {/* Add Party Modal - Material Design 3 Dialog */}
       {showAddPartyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-stone-900/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-stone-800 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden p-4 sm:p-5 space-y-3.5 border border-stone-200 dark:border-stone-750">
-            <h3 className="font-black text-base text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
-              <span>👤</span>
-              <span>নতুন পার্টি যোগ করুন</span>
-            </h3>
-            <form onSubmit={handleAddNewParty} className="space-y-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-md">
+          <div className="material-card w-full max-w-sm md:max-w-md rounded-3xl shadow-2xl overflow-hidden border animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-850/80">
+              <h3 className="font-bold text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <span className="p-1 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
+                  <PersonAddRoundedIcon className="w-5 h-5" />
+                </span>
+                <span>নতুন পার্টি যোগ করুন</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddPartyModal(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+              >
+                <CloseRoundedIcon className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleAddNewParty} className="p-5 space-y-3.5">
               <div>
-                <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block mb-1">পার্টির নাম</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">পার্টির নাম *</label>
                 <input
                   type="text"
                   required
                   placeholder="যেমন: ভাই ভাই ট্রেডার্স"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="w-full text-xs sm:text-sm font-semibold border border-stone-300 dark:border-stone-650 rounded-xl p-2.5 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                  className="w-full text-xs sm:text-sm font-semibold border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block mb-1">মোবাইল</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">মোবাইল নম্বর</label>
                   <input
                     type="text"
                     placeholder="০১৭০০-০০০০০০"
                     value={newPhone}
                     onChange={(e) => setNewPhone(e.target.value)}
-                    className="w-full text-xs sm:text-sm font-semibold border border-stone-300 dark:border-stone-650 rounded-xl p-2.5 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                    className="w-full text-xs sm:text-sm font-semibold border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block mb-1">পার্টির ধরণ</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">পার্টির ধরণ</label>
                   <select
                     value={newType}
                     onChange={(e) => setNewType(e.target.value as Party['type'])}
-                    className="w-full text-xs sm:text-sm border border-stone-300 dark:border-stone-650 rounded-xl p-2.5 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 font-bold"
+                    className="w-full text-xs sm:text-sm border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-bold transition"
                   >
                     <option value="পাইকারি">পাইকারি</option>
                     <option value="খুচরা">খুচরা</option>
@@ -489,38 +509,42 @@ export const PartiesView: React.FC<PartiesViewProps> = ({
                 </div>
               </div>
               <div>
-                <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block mb-1">ঠিকানা (ঐচ্ছিক)</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">ঠিকানা (ঐচ্ছিক)</label>
                 <input
                   type="text"
                   placeholder="যেমন: কারওয়ান বাজার, ঢাকা"
                   value={newAddress}
                   onChange={(e) => setNewAddress(e.target.value)}
-                  className="w-full text-xs sm:text-sm font-semibold border border-stone-300 dark:border-stone-650 rounded-xl p-2.5 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                  className="w-full text-xs sm:text-sm font-semibold border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block mb-1">পূর্বের কোনো বাকি থাকলে (টাকা)</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">পূর্বের কোনো বাকি থাকলে (টাকা)</label>
                 <input
-                  type="number"
-                  min="0"
-                  value={newInitialDue || ''}
-                  onChange={(e) => setNewInitialDue(Number(e.target.value))}
+                  type="text"
+                  inputMode="numeric"
+                  value={newInitialDueStr}
+                  onChange={(e) => {
+                    const formatted = formatTypingNumber(e.target.value, false, useBengali);
+                    setNewInitialDueStr(formatted);
+                    setNewInitialDue(parseBengaliToNumber(formatted));
+                  }}
                   placeholder="০"
-                  className="w-full text-xs sm:text-sm border border-stone-300 dark:border-stone-650 rounded-xl p-2.5 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 font-black"
+                  className="w-full text-xs sm:text-sm border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-bold tabular-nums transition"
                 />
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowAddPartyModal(false)}
-                  className="flex-1 py-2.5 text-xs sm:text-sm font-bold text-stone-700 dark:text-stone-300 bg-stone-100 dark:bg-stone-700 rounded-xl hover:bg-stone-200 dark:hover:bg-stone-600 transition active:scale-95"
+                  className="flex-1 py-2.5 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-95"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 text-xs sm:text-sm font-black text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 hover:from-indigo-700 hover:to-emerald-700 rounded-xl shadow-xs transition active:scale-95"
+                  className="flex-1 py-2.5 text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-xl shadow-md shadow-blue-600/20 transition active:scale-95"
                 >
                   সংরক্ষণ করুন
                 </button>

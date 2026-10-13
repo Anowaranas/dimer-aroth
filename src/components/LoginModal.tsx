@@ -565,11 +565,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   return (
     <div
       id="login-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-stone-950/70 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-stone-950/75 backdrop-blur-md animate-in fade-in duration-150"
     >
       <div
         id="login-modal-card"
-        className="bg-white dark:bg-stone-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 border border-stone-200 dark:border-stone-800 max-h-[92vh] flex flex-col"
+        className="material-card w-full max-w-md md:max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 border max-h-[92vh] flex flex-col"
       >
         {/* Clean Modern Header - Rich Mixed Jewel Tone */}
         <div className="bg-gradient-to-r from-indigo-700 via-purple-700 to-blue-700 text-white px-5 py-3.5 flex items-center justify-between shadow-xs shrink-0">

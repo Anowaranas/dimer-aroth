@@ -2,18 +2,18 @@ import React, { useState } from 'react';
 import { SupplierChalan, ShopProfile } from '../types';
 import { toBengaliNumber, toBnCurrency, formatDisplayChalanNumber } from '../utils/bengaliUtils';
 import { downloadElementAsImage, shareMemoAnywhere, formatChalanShareText, shareUniversal } from '../utils/shareUtils';
-import { 
-  X, 
-  Printer, 
-  Share2, 
-  Download, 
-  Loader2, 
-  Trash2, 
-  Check, 
-  MessageSquare
-} from 'lucide-react';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import PrintRoundedIcon from '@mui/icons-material/PrintRounded';
+import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
+import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
+import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
+import CircularProgress from '@mui/material/CircularProgress';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { getPartyColorTheme } from '../utils/partyColors';
+import { hapticCancel } from '../utils/haptics';
 
 interface ChalanVoucherModalProps {
   chalan: SupplierChalan | null;
@@ -115,15 +115,18 @@ export const ChalanVoucherModal: React.FC<ChalanVoucherModalProps> = ({
     >
       <div 
         id="chalan-voucher-card"
-        className="bg-white dark:bg-stone-900 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[96vh] border border-stone-200 dark:border-stone-800"
+        className="soft-elevated modal-enter w-full max-w-xl md:max-w-2xl rounded-3xl overflow-hidden flex flex-col max-h-[96vh] border border-stone-200/80 dark:border-white/10"
       >
-        {/* Modal Top Toolbar & Actions (হুবহু মেমোর ভাউচারের মতো সেইম) */}
+        {/* Modal Top Toolbar & Actions */}
         <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-4 py-2.5 bg-stone-100/90 dark:bg-stone-850 border-b border-stone-200 dark:border-stone-800 print:hidden">
           <div className="flex items-center gap-2">
-            <span className="font-black text-stone-900 dark:text-stone-100 text-sm sm:text-base">
+            <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950 flex items-center justify-center text-blue-700 dark:text-blue-300">
+              <LocalShippingRoundedIcon className="w-4 h-4" />
+            </div>
+            <span className="font-bold text-stone-900 dark:text-stone-100 text-sm sm:text-base">
               মহাজন চালান
             </span>
-            <span className="bg-stone-800 text-white text-xs sm:text-sm px-2.5 py-0.5 rounded-md font-mono font-black">
+            <span className="bg-stone-800 text-white text-xs sm:text-sm px-2.5 py-0.5 rounded-lg font-mono font-bold shadow-2xs">
               {formatDisplayChalanNumber(chalan.chalanNumber, useBengali)}
             </span>
           </div>
@@ -132,47 +135,68 @@ export const ChalanVoucherModal: React.FC<ChalanVoucherModalProps> = ({
           <div className="flex items-center gap-1.5">
             <button
               id="chalan-share-top-btn"
+              type="button"
               onClick={handleDirectShareImage}
               disabled={isSharingDirect}
-              title="চালানের ছবি শেয়ার করুন"
-              className="p-1.5 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 text-white rounded-lg shadow-xs transition active:scale-95 disabled:opacity-50"
+              title="চালানের ছবি সরাসরি শেয়ার করুন"
+              className="p-2 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 text-white rounded-xl shadow-xs transition active:scale-95 disabled:opacity-50 flex items-center justify-center"
             >
-              {isSharingDirect ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5" />}
+              {isSharingDirect ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <ShareRoundedIcon className="w-4 h-4" />
+              )}
             </button>
             <button
               id="chalan-download-img-btn"
+              type="button"
               onClick={handleDownloadImage}
               disabled={isDownloading}
               title="চালানের ছবি (PNG) ডাউনলোড করুন"
-              className="p-1.5 bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 text-stone-800 dark:text-stone-200 rounded-lg shadow-xs transition active:scale-95 disabled:opacity-50"
+              className="p-2 bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 text-stone-800 dark:text-stone-200 rounded-xl shadow-2xs transition active:scale-95 disabled:opacity-50 flex items-center justify-center"
             >
-              {isDownloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+              {isDownloading ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : downloadSuccess ? (
+                <CheckRoundedIcon className="w-4 h-4 text-emerald-600" />
+              ) : (
+                <DownloadRoundedIcon className="w-4 h-4" />
+              )}
             </button>
             <button
               id="chalan-print-btn"
+              type="button"
               onClick={handlePrint}
               title="প্রিন্ট করুন"
-              className="p-1.5 bg-stone-800 text-white hover:bg-stone-900 rounded-lg shadow-xs transition active:scale-95"
+              className="p-2 bg-stone-800 text-white hover:bg-stone-900 rounded-xl shadow-2xs transition active:scale-95 flex items-center justify-center"
             >
-              <Printer className="w-3.5 h-3.5" />
+              <PrintRoundedIcon className="w-4 h-4" />
             </button>
             {onDeleteChalan && (
               <button
                 id="chalan-delete-btn"
-                onClick={() => setShowDeleteConfirm(true)}
+                type="button"
+                onClick={() => {
+                  hapticCancel();
+                  setShowDeleteConfirm(true);
+                }}
                 title="চালান মুছুন"
-                className="p-1.5 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-lg transition active:scale-95"
+                className="p-2 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-xl transition active:scale-95 flex items-center justify-center"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <DeleteOutlineRoundedIcon className="w-4 h-4" />
               </button>
             )}
             <button
               id="chalan-close-btn"
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-stone-200 dark:bg-stone-700 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-600 text-stone-700 dark:text-stone-200 flex items-center justify-center transition active:scale-90 shadow-2xs ml-1"
+              type="button"
+              onClick={() => {
+                hapticCancel();
+                onClose();
+              }}
+              className="w-8 h-8 rounded-full bg-stone-200 dark:bg-stone-700 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-600 text-stone-700 dark:text-stone-200 flex items-center justify-center transition active:scale-90 shadow-2xs ml-0.5"
               title="চালান বন্ধ করুন"
             >
-              <X className="w-5 h-5 stroke-[2.5]" />
+              <CloseRoundedIcon className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -198,150 +222,155 @@ export const ChalanVoucherModal: React.FC<ChalanVoucherModalProps> = ({
           
           <div 
             id="printable-chalan-paper" 
-            className="bg-white border-2 border-slate-900 p-2 sm:p-2.5 rounded-xl shadow-xl text-slate-950 max-w-[520px] mx-auto text-xs sm:text-sm relative overflow-hidden font-['Anek_Bangla','Hind_Siliguri','Noto_Sans_Bengali',sans-serif]"
-            style={{ lineHeight: '1.4', letterSpacing: 'normal' }}
+            className="bg-white border-2 border-slate-900 p-2.5 sm:p-3 rounded-xl shadow-xl text-slate-950 max-w-[530px] mx-auto text-[13px] sm:text-[15px] relative overflow-hidden font-['Anek_Bangla','Hind_Siliguri','Noto_Sans_Bengali',sans-serif]"
+            style={{ lineHeight: '1.45', letterSpacing: 'normal' }}
           >
             {/* Top Color Accent Strip based on Color Theme */}
-            <div className={`h-2.5 w-full bg-gradient-to-r ${theme.headerBar} -mt-2 -mx-2 sm:-mt-2.5 sm:-mx-2.5 mb-1.5`}></div>
+            <div className={`h-2.5 w-full bg-gradient-to-r ${theme.headerBar} -mt-2.5 -mx-2.5 sm:-mt-3 sm:-mx-3 mb-2`}></div>
 
-            {/* 1. Header: Shop Identity */}
-            <div className="text-center pb-2 border-b-2 border-slate-300">
-              <h2 className="text-lg sm:text-xl font-black text-slate-950" style={{ lineHeight: '1.3', letterSpacing: 'normal' }}>
+            {/* 1. Header: Shop Identity (7% larger) */}
+            <div className="text-center pb-2.5 border-b-2 border-slate-300">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight" style={{ lineHeight: '1.3', letterSpacing: 'normal' }}>
                 {shopProfile.name}
               </h2>
               {shopProfile.tagline && (
-                <p className="text-[11px] sm:text-xs text-blue-950 font-black mt-0.5">
+                <p className="text-xs sm:text-[13.5px] text-blue-950 font-black mt-0.5">
                   {shopProfile.tagline}
                 </p>
               )}
-              <p className="text-[11px] sm:text-xs text-slate-900 font-bold mt-0.5">
+              <p className="text-xs sm:text-[13.5px] text-slate-900 font-bold mt-0.5">
                 {shopProfile.proprietor && <span>প্রোঃ {shopProfile.proprietor}</span>}
                 {shopProfile.proprietor && shopProfile.mobile && <span className="text-blue-600 font-black px-1.5">•</span>}
                 {shopProfile.mobile && <span>মোবাইল: {shopProfile.mobile}</span>}
               </p>
               {shopProfile.address && (
-                <p className="text-[10.5px] sm:text-xs text-slate-700 font-medium mt-0.5">
+                <p className="text-[11.5px] sm:text-[13px] text-slate-700 font-medium mt-0.5">
                   {shopProfile.address}
                 </p>
               )}
-              <div className="inline-block mt-1.5 px-3 py-0.5 bg-slate-950 text-white rounded-full text-[11px] font-black shadow-xs">
+              <div className="inline-block mt-1.5 px-3.5 py-0.5 bg-slate-950 text-white rounded-full text-xs font-black shadow-xs">
                 মহাজন ডিমের চালান ভাউচার
               </div>
             </div>
 
-            {/* 2. Supplier & Chalan Info (Clear High Contrast Box with Accent) */}
-            <div className={`bg-slate-50/90 border-2 border-slate-800 border-l-[5px] ${theme.borderLeft} rounded-xl p-2.5 my-2 grid grid-cols-2 gap-2 text-xs sm:text-sm`}>
-              <div className="space-y-1">
+            {/* 2. Supplier & Chalan Info (High Contrast Clean Box) */}
+            <div className={`bg-slate-50 border-2 border-slate-900 rounded-xl p-2.5 sm:p-3 my-2 grid grid-cols-2 gap-2 text-xs sm:text-sm shadow-xs`}>
+              <div className="space-y-1 min-w-0">
                 <div>
-                  <span className="text-slate-600 font-bold text-[10.5px] block mb-0.5">মহাজন / খামারির নাম:</span>
-                  <span className="font-black text-slate-950 text-xs sm:text-sm block">
+                  <span className="text-slate-700 font-bold text-xs block mb-0.5">মহাজন / খামারির নাম:</span>
+                  <span className="font-black text-slate-950 text-sm sm:text-lg block break-words leading-tight tracking-tight">
                     {chalan.supplierName}
                   </span>
                 </div>
                 {chalan.supplierPhone && (
-                  <div className="flex items-center gap-1">
-                    <span className="text-slate-600 font-bold text-[10.5px]">মোবাইল:</span>
-                    <span className="font-black text-slate-950 tabular-nums text-xs">{chalan.supplierPhone}</span>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="text-slate-700 font-bold text-xs shrink-0">মোবাইল:</span>
+                    <span className="font-black text-slate-950 tabular-nums text-xs sm:text-sm truncate">{chalan.supplierPhone}</span>
                   </div>
                 )}
                 <div>
-                  <span className="inline-block border border-blue-300 bg-blue-100 text-blue-950 px-1.5 py-0.2 rounded font-black text-[10.5px]">
+                  <span className="inline-block border-2 border-blue-300 bg-blue-100 text-blue-950 px-2.5 py-0.5 rounded-md font-black text-xs">
                     মহাজন চালান
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-1 text-right flex flex-col justify-between">
+              <div className="space-y-1 text-right flex flex-col justify-between min-w-0">
                 <div>
-                  <span className="text-slate-600 font-bold text-[10.5px] block mb-0.5">চালান নং:</span>
-                  <span className="inline-block bg-slate-950 text-white font-black font-mono text-xs px-2 py-0.5 rounded shadow-xs">
+                  <span className="text-slate-700 font-bold text-xs block mb-0.5">চালান নং:</span>
+                  <span className="inline-block bg-slate-950 text-white font-black font-mono text-xs sm:text-sm px-2.5 py-0.5 rounded-md shadow-xs max-w-full truncate">
                     {formatDisplayChalanNumber(chalan.chalanNumber, useBengali)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-600 font-bold text-[10.5px] block mb-0.5">তারিখ:</span>
-                  <span className="font-black text-slate-950 text-xs block">
+                  <span className="text-slate-700 font-bold text-xs block mb-0.5">তারিখ:</span>
+                  <span className="font-black text-slate-950 text-xs sm:text-sm block break-keep leading-tight">
                     {chalan.formattedDate}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* 3. Items Table: Crisp High-Contrast Header & Clean Boxes */}
+            {/* 3. Items Table: Crystal-Clear, High-Contrast Table with Sharp Grid */}
             <div className="py-0.5">
               <div className="border-2 border-slate-900 rounded-xl overflow-hidden shadow-xs">
-                <table className="w-full text-xs text-left border-collapse">
+                <table className="w-full text-xs text-left border-collapse table-fixed">
                   <thead>
-                    <tr className="bg-slate-950 text-white font-black text-[11px] sm:text-xs whitespace-nowrap">
-                      <th className="py-2 px-2.5 w-[38%] border-r border-slate-800 whitespace-nowrap">ডিমের বিবরণ</th>
-                      <th className="py-2 px-2 text-center w-[20%] whitespace-nowrap border-r border-slate-800">পরিমাণ</th>
-                      <th className="py-2 px-2 text-right w-[20%] whitespace-nowrap border-r border-slate-800">দর (প্রতি পিস)</th>
-                      <th className="py-2 px-2.5 text-right w-[22%] whitespace-nowrap">মোট (৳)</th>
+                    <tr className="bg-slate-950 text-white font-black text-xs sm:text-[13px]">
+                      <th className="py-2 px-2.5 w-[34%] border-r border-slate-800">ডিমের বিবরণ</th>
+                      <th className="py-2 px-1 text-center w-[18%] border-r border-slate-800">পরিমাণ</th>
+                      <th className="py-2 px-1 text-right w-[18%] border-r border-slate-800">দর</th>
+                      <th className="py-2 px-2.5 text-right w-[30%]">মোট (৳)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y-2 divide-slate-200">
-                    {items.map((item, idx) => (
-                      <tr key={idx} className={idx % 2 === 0 ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/90 hover:bg-slate-100'}>
-                        <td className="py-2 px-2.5 font-black text-slate-950 text-xs border-r border-slate-200 whitespace-nowrap">
-                          <span className="leading-tight whitespace-nowrap">{item.name}</span>
-                        </td>
-                        <td className="py-2 px-2 text-center font-black text-slate-950 whitespace-nowrap border-r border-slate-200 tabular-nums text-xs">
-                          <span className="bg-slate-100 px-1.5 py-0.2 rounded border border-slate-300 inline-block whitespace-nowrap">
-                            {toBengaliNumber(item.count, useBengali)}&nbsp;পিস
-                          </span>
-                        </td>
-                        <td className="py-2 px-2 text-right font-black text-slate-950 whitespace-nowrap border-r border-slate-200 tabular-nums text-xs">
-                          <span className="whitespace-nowrap">৳&nbsp;{toBengaliNumber(item.rate.toFixed(2), useBengali)}</span>
-                        </td>
-                        <td className="py-2 px-2.5 text-right font-black text-slate-950 whitespace-nowrap tabular-nums text-xs">
-                          <span className="whitespace-nowrap">৳&nbsp;{toBengaliNumber(item.total.toFixed(2), useBengali)}</span>
-                        </td>
-                      </tr>
-                    ))}
+                    {items.map((item, idx) => {
+                      const formattedRate = Number.isInteger(item.rate)
+                        ? item.rate.toString()
+                        : item.rate % 1 === 0 ? item.rate.toFixed(0) : item.rate.toFixed(2).replace(/\.?0+$/, '');
+                      return (
+                        <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                          <td className="py-2 px-2.5 font-black text-slate-950 text-xs sm:text-[14px] border-r-2 border-slate-200 break-words">
+                            <span className="leading-tight block">{item.name}</span>
+                          </td>
+                          <td className="py-2 px-1 text-center font-black text-slate-950 border-r-2 border-slate-200 tabular-nums text-xs sm:text-[14px]">
+                            <span className="bg-slate-100 px-1.5 py-0.5 rounded border border-slate-300 inline-block whitespace-nowrap">
+                              {toBengaliNumber(item.count, useBengali)}&nbsp;টি
+                            </span>
+                          </td>
+                          <td className="py-2 px-1 text-right font-black text-slate-950 border-r-2 border-slate-200 tabular-nums text-xs sm:text-[14px] whitespace-nowrap">
+                            <span>৳{toBengaliNumber(formattedRate, useBengali)}</span>
+                          </td>
+                          <td className="py-2 px-2.5 text-right font-black text-slate-950 tabular-nums text-xs sm:text-[14px] whitespace-nowrap">
+                            <span>৳{toBengaliNumber(item.total, useBengali)}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             </div>
 
-            {/* 4. Financial Summary: Clearly Separated Distinct Boxed Rows */}
+            {/* 4. Financial Summary: High Contrast Boxed Rows with Clear Alignment */}
             <div className="pt-2">
-              <div className="w-full sm:w-11/12 ml-auto bg-white border-2 border-slate-900 rounded-2xl p-3 space-y-2 text-xs sm:text-sm shadow-md">
+              <div className="w-full bg-white border-2 border-slate-900 rounded-2xl p-2.5 sm:p-3 space-y-1.5 text-xs sm:text-sm shadow-sm">
                 {/* মোট ডিমের ক্রয় মূল্য */}
-                <div className="flex justify-between items-center gap-2 flex-nowrap bg-amber-100 text-amber-950 border-2 border-amber-400 font-black px-3 py-1.5 rounded-xl text-xs shadow-xs">
-                  <span className="whitespace-nowrap shrink-0">মোট ডিমের ক্রয় মূল্য:</span>
-                  <span className="tabular-nums text-xs sm:text-sm whitespace-nowrap shrink-0 text-right">
+                <div className="flex justify-between items-center gap-2 bg-amber-50 text-amber-950 border-2 border-amber-400 font-black px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-2xs min-w-0">
+                  <span className="shrink-0 font-extrabold whitespace-nowrap text-xs sm:text-[13.5px]">মোট ডিমের ক্রয় মূল্য:</span>
+                  <span className="tabular-nums font-black whitespace-nowrap text-right ml-auto pl-2 text-xs sm:text-base">
                     {toBnCurrency(chalan.totalAmount, useBengali)}
                   </span>
                 </div>
 
                 {/* পূর্বের দেনা বাকি */}
                 {chalan.previousDue !== undefined && chalan.previousDue > 0 && (
-                  <div className="flex justify-between items-center gap-2 flex-nowrap text-purple-950 font-black bg-purple-100 border-2 border-purple-300 px-3 py-1.5 rounded-xl text-xs shadow-xs">
-                    <span className="whitespace-nowrap shrink-0">পূর্বের দেনা বাকি (জের):</span>
-                    <span className="tabular-nums text-xs sm:text-sm whitespace-nowrap shrink-0 text-right">+{toBnCurrency(chalan.previousDue, useBengali)}</span>
+                  <div className="flex justify-between items-center gap-2 text-purple-950 font-black bg-purple-50 border-2 border-purple-400 px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-2xs min-w-0">
+                    <span className="shrink-0 font-extrabold whitespace-nowrap text-xs sm:text-[13.5px]">পূর্বের দেনা বাকি (জের):</span>
+                    <span className="tabular-nums font-black whitespace-nowrap text-right ml-auto pl-2 text-xs sm:text-base">+{toBnCurrency(chalan.previousDue, useBengali)}</span>
                   </div>
                 )}
 
                 {/* সর্বমোট দাবি বিল */}
-                <div className="flex justify-between items-center gap-2 flex-nowrap font-black text-blue-950 bg-blue-100 border-2 border-blue-400 px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-xs">
-                  <span className="whitespace-nowrap shrink-0">সর্বমোট দাবি বিল:</span>
-                  <span className="tabular-nums text-xs sm:text-sm font-black whitespace-nowrap shrink-0 text-right">{toBnCurrency(chalan.totalDemand, useBengali)}</span>
+                <div className="flex justify-between items-center gap-2 font-black text-blue-950 bg-blue-50 border-2 border-blue-500 px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-2xs min-w-0">
+                  <span className="shrink-0 font-extrabold whitespace-nowrap text-xs sm:text-[13.5px]">সর্বমোট দাবি বিল:</span>
+                  <span className="tabular-nums font-black whitespace-nowrap text-right ml-auto pl-2 text-xs sm:text-base">{toBnCurrency(chalan.totalDemand, useBengali)}</span>
                 </div>
 
                 {/* নগদ পরিশোধ / জমা */}
-                <div className="flex justify-between items-center gap-2 flex-nowrap text-emerald-950 font-black bg-emerald-100 border-2 border-emerald-400 px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-xs">
-                  <span className="whitespace-nowrap shrink-0">নগদ পরিশোধ (জমা):</span>
-                  <span className="tabular-nums text-xs sm:text-sm whitespace-nowrap shrink-0 text-right">-{toBnCurrency(chalan.paidAmount || 0, useBengali)}</span>
+                <div className="flex justify-between items-center gap-2 text-emerald-950 font-black bg-emerald-50 border-2 border-emerald-500 px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow-2xs min-w-0">
+                  <span className="shrink-0 font-extrabold whitespace-nowrap text-xs sm:text-[13.5px]">নগদ পরিশোধ (জমা):</span>
+                  <span className="tabular-nums font-black whitespace-nowrap text-right ml-auto pl-2 text-xs sm:text-base">-{toBnCurrency(chalan.paidAmount || 0, useBengali)}</span>
                 </div>
 
                 {/* বর্তমান দেনা অবস্থা */}
-                <div className={`flex justify-between items-center gap-2 flex-nowrap font-black text-xs sm:text-sm px-3 py-1.5 rounded-xl border-2 shadow-sm ${
+                <div className={`flex justify-between items-center gap-2 font-black text-xs sm:text-sm px-3 py-2 rounded-xl border-2 shadow-xs min-w-0 ${
                   currentRemDue > 0
                     ? 'bg-rose-600 border-rose-800 text-white'
                     : 'bg-emerald-600 border-emerald-800 text-white'
                 }`}>
-                  <span className="whitespace-nowrap shrink-0">{currentRemDue > 0 ? 'বর্তমান দেনা বাকি:' : 'পেমেন্ট অবস্থা:'}</span>
-                  <span className="tabular-nums text-xs sm:text-sm font-black whitespace-nowrap shrink-0 text-right">
+                  <span className="shrink-0 font-extrabold whitespace-nowrap text-xs sm:text-[14px]">{currentRemDue > 0 ? 'বর্তমান দেনা বাকি:' : 'পেমেন্ট অবস্থা:'}</span>
+                  <span className="tabular-nums font-black whitespace-nowrap text-right ml-auto pl-2 text-sm sm:text-base">
                     {currentRemDue > 0 
                       ? toBnCurrency(currentRemDue, useBengali) 
                       : '✓ সম্পূর্ণ পরিশোধিত'}
@@ -350,31 +379,98 @@ export const ChalanVoucherModal: React.FC<ChalanVoucherModalProps> = ({
               </div>
             </div>
 
-            {/* 5. Note (if present) */}
+            {/* 5. Note (if present) - Clean Border */}
             {(chalan.note || chalan.notes) && (
-              <div className="mt-1.5 bg-slate-100 border-l-4 border-indigo-600 rounded-r-lg p-1.5 text-xs text-slate-900 font-bold">
-                <span>মন্তব্য: </span>
-                <span className="font-black">{chalan.note || chalan.notes}</span>
+              <div className="mt-2 bg-slate-50 border-2 border-slate-300 rounded-xl p-2 text-xs sm:text-sm text-slate-900 font-bold break-words">
+                <span className="text-slate-700">মন্তব্য: </span>
+                <span className="font-black text-slate-950">{chalan.note || chalan.notes}</span>
               </div>
             )}
 
             {/* 6. Signatures */}
-            <div className="mt-2.5 pt-1.5 flex justify-between text-xs text-slate-950 font-black">
-              <div className="text-center w-26 sm:w-34">
-                <div className="border-t-2 border-dashed border-slate-500 mb-0.5"></div>
-                <span className="text-slate-800 font-bold text-[10px]">মহাজন / বিক্রেতার স্বাক্ষর</span>
+            <div className="mt-2 pt-2 flex justify-between text-xs text-slate-950 font-black">
+              <div className="text-center w-28 sm:w-36">
+                <div className="border-t-2 border-dashed border-slate-500 mb-1"></div>
+                <span className="text-slate-800 font-bold text-xs">মহাজন / বিক্রেতার স্বাক্ষর</span>
               </div>
-              <div className="text-center w-26 sm:w-34">
-                <div className="border-t-2 border-slate-900 mb-0.5"></div>
-                <span className="text-slate-950 font-black text-[10px]">আড়তদার / ক্রেতার স্বাক্ষর</span>
+              <div className="text-center w-28 sm:w-36">
+                <div className="border-t-2 border-slate-900 mb-1"></div>
+                <span className="text-slate-950 font-black text-xs">আড়তদার / ক্রেতার স্বাক্ষর</span>
               </div>
             </div>
 
             {/* 7. Footer Slogan */}
-            <div className="mt-1.5 pt-0.5 border-t border-slate-200 text-center text-[10px] text-slate-800 font-bold">
+            <div className="mt-2 pt-1 border-t border-slate-200 text-center text-xs text-slate-800 font-bold">
               <p>{shopProfile.memoFooter || 'ধন্যবাদ, আবার আসবেন।'}</p>
             </div>
           </div>
+        </div>
+
+        {/* Bottom Actions Bar - Material Design 3 Sleek Bar */}
+        <div className="p-2 bg-stone-100/95 dark:bg-stone-850 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between gap-2 print:hidden">
+          {/* Direct Share with Image Only */}
+          <button
+            id="modal-chalan-direct-share-btn"
+            type="button"
+            onClick={handleDirectShareImage}
+            disabled={isSharingDirect}
+            className="flex-1 py-2 px-3 soft-btn-purple rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-50"
+            title="চালানের ছবি সরাসরি শেয়ার করুন"
+          >
+            {isSharingDirect ? (
+              <CircularProgress size={13} color="inherit" />
+            ) : (
+              <ShareRoundedIcon className="w-3.5 h-3.5 shrink-0" />
+            )}
+            <span className="truncate">ছবি শেয়ার</span>
+          </button>
+
+          {/* Copy Text Summary */}
+          <button
+            id="modal-chalan-copy-text-btn"
+            type="button"
+            onClick={handleShareText}
+            className="py-2 px-3 soft-btn text-indigo-700 dark:text-indigo-300 rounded-xl font-black text-xs flex items-center justify-center gap-1 transition active:scale-95"
+            title="চালানের বিবরণ লেখা কপি করুন"
+          >
+            {copiedText ? (
+              <CheckRoundedIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            ) : (
+              <ContentCopyRoundedIcon className="w-3.5 h-3.5 shrink-0" />
+            )}
+            <span>{copiedText ? 'কপি হয়েছে' : 'টেক্সট কপি'}</span>
+          </button>
+
+          {/* Download PNG Image */}
+          <button
+            id="modal-chalan-download-image-btn"
+            type="button"
+            onClick={handleDownloadImage}
+            disabled={isDownloading}
+            className="py-2 px-3 soft-btn rounded-xl font-black text-xs flex items-center justify-center gap-1 transition active:scale-95 disabled:opacity-50"
+            title="চালানের ছবি ডাউনলোড"
+          >
+            {isDownloading ? (
+              <CircularProgress size={13} color="inherit" />
+            ) : downloadSuccess ? (
+              <CheckRoundedIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            ) : (
+              <DownloadRoundedIcon className="w-3.5 h-3.5 shrink-0" />
+            )}
+            <span>ডাউনলোড</span>
+          </button>
+
+          {/* Print */}
+          <button
+            id="modal-chalan-print-slip"
+            type="button"
+            onClick={handlePrint}
+            className="py-2 px-3 soft-btn bg-stone-900 text-white hover:bg-stone-950 rounded-xl font-black text-xs flex items-center justify-center gap-1 transition active:scale-95"
+            title="প্রিন্ট করুন"
+          >
+            <PrintRoundedIcon className="w-3.5 h-3.5 shrink-0" />
+            <span>প্রিন্ট</span>
+          </button>
         </div>
       </div>
     </div>
